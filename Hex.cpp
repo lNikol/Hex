@@ -1,7 +1,6 @@
 ﻿#include "Hex.h"
 
 Hex::Hex() {
-
 }
 
 void Hex::setHexBoardSize(const short& size) {
