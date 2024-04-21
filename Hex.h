@@ -7,14 +7,11 @@ using namespace std;
 const size_t SIZE = 11;
 
 struct Hex {
-	vector<string> hex;
-	vector<vector<Cell>> map = vector<vector<Cell>>(SIZE);
+	vector<vector<Cell>> board = vector<vector<Cell>>(SIZE);
 	bool isMaxOldSet = false;
 	short oldTags = 0, maxOldTags = 0;
 
 	short lineCounter = 0;
-	short symbolCounter = 0;
-	short elementsCounter = 0;
 	short BOARD_SIZE = 0;
 	short PAWNS_NUMBER = 0;
 	short RED_PAWNS = 0;
@@ -31,5 +28,8 @@ struct Hex {
 	void setPlayerSymbol(char s, const short& line, const short& cell);
 	bool get_IS_BOARD_CORRECT();
 	void drawHex();
-
+	void resetVisited();
+	vector<Cell*> getNeighbors(const Cell* cell);
+	bool beforeDFS(ofstream& file);
+	bool DFS(Cell* cell, bool isRed);
 };

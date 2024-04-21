@@ -5,16 +5,18 @@
 #include "Hex.h"
 using namespace std;
 
+
 int main()
 {
 	ofstream file("temp.txt");
+
 	Hex hex;
 	string line;
 	while (getline(cin, line)) {
 		if (line == "BOARD_SIZE") {
 			//cout << hex.hex.size() / 2 << endl;
 			if (file.is_open()) {
-				file << hex.hex.size() / 2 << endl << endl;
+				file << hex.lineCounter / 2 << endl << endl;
 			}
 			hex = Hex();
 		}
@@ -40,7 +42,13 @@ int main()
 		}
 		else if (line == "IS_GAME_OVER") {
 			if (hex.get_IS_BOARD_CORRECT()) {
-
+				hex.beforeDFS(file);
+			}
+			else {
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl;
 			}
 			hex = Hex();
 
@@ -52,23 +60,36 @@ int main()
 			hex = Hex();
 
 		}
-		else if (line == "CAN_RED_WIN_IN_N_MOVE_WITH_NAIVE_OPPONENT") {
+		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT()) {
 
 			}
 			hex = Hex();
 
 		}
-		else if (line == "CAN_RED_WIN_IN_N_MOVE_WITH_PERFECT_OPPONENT") {
+		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_NAIVE_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT()) {
 
 			}
 			hex = Hex();
 
+		}
+		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
+			if (hex.get_IS_BOARD_CORRECT()) {
+
+			}
+			hex = Hex();
+		}
+		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_PERFECT_OPPONENT") {
+			if (hex.get_IS_BOARD_CORRECT()) {
+
+			}
+			hex = Hex();
 		}
 		else {
 			int tagCounter = 0; for (char c : line) { if (c == '<') tagCounter++; }
-			short counter;
+			short counter; // liczy linii i dzieki niemu 
+			// odpowiednio dodaje Cell do hex 11x11, ktory jest tablica
 			if (hex.oldTags > tagCounter) {
 				if (!hex.isMaxOldSet) {
 					hex.maxOldTags = hex.oldTags;
@@ -88,23 +109,23 @@ int main()
 					for (int j = 0; j < 5; j++) {
 						cell[j] = line[i + j];
 					}
-					i += 4; // symbol '>' in cell
+					i += 4; // symbol '>' in line
 
 					switch (cell[2]) {
 					case 'r': {
-						hex.map[counter].insert(hex.map[counter].begin(), Cell(cell[2]));
+						hex.board[counter].push_back(Cell(cell[2], counter, hex.board[counter].size()));
 						hex.RED_PAWNS++;
 						hex.PAWNS_NUMBER++;
 						break;
 					}
 					case 'b': {
-						hex.map[counter].insert(hex.map[counter].begin(), Cell(cell[2]));
+						hex.board[counter].push_back(Cell(cell[2], counter, hex.board[counter].size()));
 						hex.BLUE_PAWNS++;
 						hex.PAWNS_NUMBER++;
 						break;
 					}
 					case ' ': {
-						hex.map[counter].insert(hex.map[counter].begin(), Cell(cell[2]));
+						hex.board[counter].push_back(Cell(cell[2], counter, hex.board[counter].size()));
 						break;
 					}
 					default: {
@@ -121,11 +142,12 @@ int main()
 				}
 			}
 			if (line != "") {
-				hex.hex.push_back(line);
+				hex.lineCounter++;
 			}
 			hex.oldTags = counter;
 		}
 
 	}
 	file.close();
+
 }
