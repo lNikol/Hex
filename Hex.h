@@ -1,11 +1,17 @@
 ﻿#pragma once
 #include <vector>
 #include <string>
+#include "Cell.h"
 // PAWNS_NUMBER ilość r i b w hexie
 using namespace std;
+const size_t SIZE = 11;
 
 struct Hex {
 	vector<string> hex;
+	vector<vector<Cell>> map = vector<vector<Cell>>(SIZE);
+	bool isMaxOldSet = false;
+	short oldTags = 0, maxOldTags = 0;
+
 	short lineCounter = 0;
 	short symbolCounter = 0;
 	short elementsCounter = 0;

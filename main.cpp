@@ -67,19 +67,54 @@ int main()
 
 		}
 		else {
+			int tagCounter = 0; for (char c : line) { if (c == '<') tagCounter++; }
+			short counter;
+			if (hex.oldTags > tagCounter) {
+				if (!hex.isMaxOldSet) {
+					hex.maxOldTags = hex.oldTags;
+					hex.isMaxOldSet = true;
+				}
+				counter = hex.maxOldTags - tagCounter;
+			}
+			else {
+				counter = 0;
+			}
 			for (short int i = 0; i < line.size(); i++) {
 				switch (line[i])
 				{
-				case 'r': {
-					hex.RED_PAWNS++;
-					hex.PAWNS_NUMBER++;
+				
+				case '<': {
+					char cell[5];
+					for (int j = 0; j < 5; j++) {
+						cell[j] = line[i + j];
+					}
+					i += 4; // symbol '>' in cell
+
+					switch (cell[2]) {
+					case 'r': {
+						hex.map[counter].insert(hex.map[counter].begin(), Cell(cell[2]));
+						hex.RED_PAWNS++;
+						hex.PAWNS_NUMBER++;
+						break;
+					}
+					case 'b': {
+						hex.map[counter].insert(hex.map[counter].begin(), Cell(cell[2]));
+						hex.BLUE_PAWNS++;
+						hex.PAWNS_NUMBER++;
+						break;
+					}
+					case ' ': {
+						hex.map[counter].insert(hex.map[counter].begin(), Cell(cell[2]));
+						break;
+					}
+					default: {
+						break;
+					}
+					}
+					counter++;
 					break;
 				}
-				case 'b': {
-					hex.BLUE_PAWNS++;
-					hex.PAWNS_NUMBER++;
-					break;
-				}
+				
 				default: {
 					break;
 				}
@@ -88,6 +123,7 @@ int main()
 			if (line != "") {
 				hex.hex.push_back(line);
 			}
+			hex.oldTags = counter;
 		}
 
 	}
