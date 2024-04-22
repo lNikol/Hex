@@ -10,26 +10,22 @@ struct Hex {
 	vector<vector<Cell>> board = vector<vector<Cell>>(SIZE);
 	bool isMaxOldSet = false;
 	short oldTags = 0, maxOldTags = 0;
-
+	short whoWon = -1; //0 - tie, 1 - red, 2 - blue
 	short lineCounter = 0;
 	short BOARD_SIZE = 0;
 	short PAWNS_NUMBER = 0;
 	short RED_PAWNS = 0;
 	short BLUE_PAWNS = 0;
-	bool IS_BOARD_POSSIBLE = false;
 	bool IS_BOARD_CORRECT = false;
-	bool CAN_RED_WIN_IN_N_MOVE_WITH_NAIVE_OPPONENT = false;
-	bool CAN_RED_WIN_IN_N_MOVE_WITH_PERFECT_OPPONENT = false;
-	char IS_GAME_OVER[9];
 
 
 	Hex();
 	void setHexBoardSize(const short& size);
 	void setPlayerSymbol(char s, const short& line, const short& cell);
 	bool get_IS_BOARD_CORRECT();
-	void drawHex();
 	void resetVisited();
 	vector<Cell*> getNeighbors(const Cell* cell);
-	bool beforeDFS(ofstream& file);
+	bool beforeDFS(vector<vector<Cell>>& board_, const short& state, short& whoWon_);
 	bool DFS(Cell* cell, bool isRed);
+	void IS_BOARD_POSSIBLE(ofstream& file, const short& state);
 };

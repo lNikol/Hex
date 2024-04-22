@@ -26,26 +26,20 @@ bool Hex::get_IS_BOARD_CORRECT() {
 	return IS_BOARD_CORRECT;
 }
 
-void Hex::drawHex() {
-
-}
-
 void Hex::resetVisited() {
 	short size = lineCounter / 2;
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size; j++) {
 			board[i][j].visited = false;
-			board[i][j].toBeVisited = false;
+			board[i][j].toBeVisited = false; // zastanowic sie nad tym czy warto zostawic
 		}
 	}
 }
 
 vector<Cell*> Hex::getNeighbors(const Cell* cell) { 
-	// Cell:board[cell.line][board[cell.line].size() - board[cell.line].pos], // nie do konca jest poprawne
-	// col: board[cell.line].size() - board[cell.line].pos;
 	vector<Cell*> neighbors;
 	short size = lineCounter / 2;
-	// (-1,0),(-1,+1),(0,+1),(+1,0),(+1,-1),(0,-1)
+
 	short dLines[] = { -1, 0, 1, 1, 0, -1 };
 	short dPoses[] = { -1, -1, 0, 1, 1, 0 };
 	
@@ -57,59 +51,52 @@ vector<Cell*> Hex::getNeighbors(const Cell* cell) {
 		}
 	}
 
-
-
-	/*
-	for game_is_over:
-	if (board[newRow][newCol].symbol == cell.symbol && cell.symbol!=' ') {
-		neighbors.insert(neighbors.begin(), board[newRow][newCol]);
-	}
-	jesli jakis gracz wygral, to nie setowac isVisited=false,
-	bo bedzie nowy hex i nie ma sensu tego robic
-	*/
-
 	return neighbors;
 }
 
-
-bool Hex::beforeDFS(ofstream& file) {
+bool Hex::beforeDFS(vector<vector<Cell>>& board_, const short& state, short& whoWon_) {
 	// dla czerwonego gracza z gornego do dolnego
+	// pseudo win:
+	// 0 - nic
+	// 1 - red win (w rzecywistosci wygral niebieski gracz)
+	// 2 - blue win (w rzecywistosci wygral czerwony gracz)
 	bool changed = false;
-	for (auto c : board[0]) {
-		if (c.symbol == 'r' && DFS(&c, true)) {
-			changed = true; 
-			if (file.is_open()) {
-				file << "YES RED" << endl << endl;
+	if (state != 1) {
+		for (auto c : board_[0]) {
+			if (c.symbol == 'r') {
+				changed = true;
+				if (DFS(&c, true)) {
+					whoWon_ = 1;
+					return true;
+				}
 			}
-			//cout << "YES RED" << endl;
-			return true;
-		}
-		else {
-			if (changed) {
-				resetVisited();
+			else {
+				if (changed) {
+					resetVisited();
+					changed = false;
+				}
 			}
 		}
+		changed = false;
 	}
-	changed = false;
-	for (int i = 0; i < lineCounter / 2; i++) {
-		if (board[i][0].symbol == 'b' && DFS(&board[i][0], false)) {
-			changed = true;
-			if (file.is_open()) {
-				file << "YES BLUE" << endl << endl;
+	if (state != 2) {
+		for (int i = 0; i < lineCounter / 2; i++) {
+			if (board_[i][0].symbol == 'b') {
+				changed = true;
+				if (DFS(&board_[i][0], false)) {
+					whoWon_ = 2;
+					return true;
+				}
 			}
-			//cout << "YES BLUE" << endl;
-			return true;
-		}
-		else {
-			if (changed) {
-				resetVisited();
+			else {
+				if (changed) {
+					resetVisited();
+					changed = false;
+				}
 			}
 		}
+		whoWon_ = 0;
 	}
-	if (file.is_open()) {
-		file << "NO" << endl << endl;
-	}
-	//cout << "NO" << endl;
 	return false;
 }
 
@@ -145,4 +132,107 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 	}
 	return false;
 
+}
+
+void Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
+	if (get_IS_BOARD_CORRECT()) {
+		if (PAWNS_NUMBER == 0) {
+			if (file.is_open()) {
+				file << "YES" << endl << endl;
+			}
+			//cout << "YES" << endl;
+			return;
+		}
+		if (!beforeDFS(board, state, whoWon)) {
+			if (file.is_open()) {
+				file << "YES" << endl << endl;
+			}
+			//cout << "YES" << endl;
+			return;
+		}
+		Hex temp = *this;
+
+		switch (whoWon) {
+		case 0: { // TIE
+			if (file.is_open()) {
+				//file << "NO" << endl << endl;
+			}
+			//cout << "NO" << endl;
+			break;
+		}
+		case 1: { // RED
+			if (BLUE_PAWNS + 1 == RED_PAWNS) {
+				bool isEnd = false;
+				/*if (file.is_open()) {
+					file << "YES" << endl << endl;
+				}*/
+
+				for (int i = 0; i < temp.lineCounter / 2; ++i) {
+					for (int j = 0; j < temp.lineCounter / 2; ++j) {
+						if (temp.board[i][j].symbol == 'r' && !isEnd) {
+							temp.board[i][j].symbol = ' ';
+							if (!temp.beforeDFS(temp.board, 2, temp.whoWon)) {
+								if (file.is_open()) {
+									file << "YES" << endl << endl;
+								}
+								isEnd = true;
+								//cout << "YES" << endl;
+							}
+							temp.resetVisited();
+						}
+					}
+				}
+
+				if (file.is_open() && !isEnd) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl;
+			}
+			break;
+		}
+		case 2: {// BLUE
+			if (BLUE_PAWNS + 1 == RED_PAWNS) {
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl;
+			}
+			else if (BLUE_PAWNS == RED_PAWNS) {
+				bool isEnd = false;
+				/*if (file.is_open()) {
+					file << "YES" << endl << endl;
+				}*/
+
+				for (int i = 0; i < temp.lineCounter / 2; ++i) {
+					for (int j = 0; j < temp.lineCounter / 2; ++j) {
+						if (temp.board[j][i].symbol == 'b' && !isEnd) {
+							temp.board[j][i].symbol = ' ';
+							if (!temp.beforeDFS(temp.board, 1, temp.whoWon)) {
+								if (file.is_open()) {
+									file << "YES" << endl << endl;
+								}
+								isEnd = true;
+								//cout << "YES" << endl;
+								break;
+							}
+							temp.resetVisited();
+						}
+					}
+				}
+
+				if (file.is_open() && !isEnd) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl;
+			}
+			break;
+		}
+		}
+	}
+	else {
+		if (file.is_open()) {
+			file << "NO" << endl << endl;
+		}
+		//cout << "NO" << endl;
+	}
 }

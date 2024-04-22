@@ -5,16 +5,16 @@
 #include "Hex.h"
 using namespace std;
 
-
 int main()
 {
 	ofstream file("temp.txt");
 
 	Hex hex;
 	string line;
+	short state = 0;
 	while (getline(cin, line)) {
 		if (line == "BOARD_SIZE") {
-			//cout << hex.hex.size() / 2 << endl;
+			//cout << hex.lineCounter / 2 << endl;
 			if (file.is_open()) {
 				file << hex.lineCounter / 2 << endl << endl;
 			}
@@ -42,7 +42,31 @@ int main()
 		}
 		else if (line == "IS_GAME_OVER") {
 			if (hex.get_IS_BOARD_CORRECT()) {
-				hex.beforeDFS(file);
+				hex.beforeDFS(hex.board, state, hex.whoWon);
+
+				switch (hex.whoWon) {
+				case 0: {
+					if (file.is_open()) {
+						file << "NO" << endl << endl;
+					}
+					//cout << "NO" << endl;
+					break;
+				}
+				case 1: {
+					if (file.is_open()) {
+						file << "YES RED" << endl << endl;
+					}
+					//cout << "YES RED" << endl;
+					break;
+				}
+				case 2: {
+					if (file.is_open()) {
+						file << "YES BLUE" << endl << endl;
+					}
+					//cout << "YES BLUE" << endl;
+					break;
+				}
+				}
 			}
 			else {
 				if (file.is_open()) {
@@ -54,9 +78,7 @@ int main()
 
 		}
 		else if (line == "IS_BOARD_POSSIBLE") {
-			if (hex.get_IS_BOARD_CORRECT()) {
-
-			}
+			hex.IS_BOARD_POSSIBLE(file, state);
 			hex = Hex();
 
 		}
