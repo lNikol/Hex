@@ -14,7 +14,7 @@ int main()
 	short state = 0;
 	while (getline(cin, line)) {
 		if (line == "BOARD_SIZE") {
-			//cout << hex.lineCounter / 2 << endl;
+			//cout << hex.lineCounter / 2 << endl << endl;
 			if (file.is_open()) {
 				file << hex.lineCounter / 2 << endl << endl;
 			}
@@ -28,52 +28,39 @@ int main()
 			hex = Hex();
 		}
 		else if (line == "IS_BOARD_CORRECT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
+			if (hex.get_IS_BOARD_CORRECT(file)) {
 				if (file.is_open()) {
 					file << "YES" << endl << endl;
-				}
-			}
-			else {
-				if (file.is_open()) {
-					file << "NO" << endl << endl;
 				}
 			}
 			hex = Hex();
 		}
 		else if (line == "IS_GAME_OVER") {
-			if (hex.get_IS_BOARD_CORRECT()) {
-				hex.beforeDFS(hex.board, state, hex.whoWon);
-
+			hex.IS_GAME_OVER(state, file);
 				switch (hex.whoWon) {
-				case 0: {
+				case 0:
 					if (file.is_open()) {
 						file << "NO" << endl << endl;
 					}
-					//cout << "NO" << endl;
+					//cout << "NO" << endl << endl;
 					break;
-				}
 				case 1: {
 					if (file.is_open()) {
 						file << "YES RED" << endl << endl;
 					}
-					//cout << "YES RED" << endl;
+					//cout << "YES RED" << endl << endl;
 					break;
 				}
 				case 2: {
 					if (file.is_open()) {
 						file << "YES BLUE" << endl << endl;
 					}
-					//cout << "YES BLUE" << endl;
+					//cout << "YES BLUE" << endl << endl;
 					break;
 				}
-				}
+				
 			}
-			else {
-				if (file.is_open()) {
-					file << "NO" << endl << endl;
-				}
-				//cout << "NO" << endl;
-			}
+		
 			hex = Hex();
 
 		}
@@ -83,27 +70,27 @@ int main()
 
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
+			//if (hex.get_IS_BOARD_CORRECT()) {
 
-			}
+			//}
 			hex = Hex();
 
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_NAIVE_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
+			if (hex.get_IS_BOARD_CORRECT(file)) {
 
 			}
 			hex = Hex();
 
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
+			if (hex.get_IS_BOARD_CORRECT(file)) {
 
 			}
 			hex = Hex();
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_PERFECT_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
+			if (hex.get_IS_BOARD_CORRECT(file)) {
 
 			}
 			hex = Hex();

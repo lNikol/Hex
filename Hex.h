@@ -20,12 +20,12 @@ struct Hex {
 
 
 	Hex();
-	void setHexBoardSize(const short& size);
 	void setPlayerSymbol(char s, const short& line, const short& cell);
-	bool get_IS_BOARD_CORRECT();
+	bool get_IS_BOARD_CORRECT(ofstream& file);
 	void resetVisited();
 	vector<Cell*> getNeighbors(const Cell* cell);
-	bool beforeDFS(vector<vector<Cell>>& board_, const short& state, short& whoWon_);
+	bool beforeDFS(vector<vector<Cell>>& board, const short& state);
 	bool DFS(Cell* cell, bool isRed);
+	bool IS_GAME_OVER(const short& state, ofstream& file);
 	void IS_BOARD_POSSIBLE(ofstream& file, const short& state);
 };

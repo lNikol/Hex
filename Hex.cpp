@@ -6,22 +6,21 @@ using namespace std;
 Hex::Hex() {
 }
 
-void Hex::setHexBoardSize(const short& size) {
-
-}
-
 void Hex::setPlayerSymbol(char s, const short& line, const short& cell) {
 	
 }
 
-bool Hex::get_IS_BOARD_CORRECT() {
+bool Hex::get_IS_BOARD_CORRECT(ofstream& file) {
 	if (BLUE_PAWNS + 1 == RED_PAWNS || BLUE_PAWNS == RED_PAWNS) {
 		IS_BOARD_CORRECT = true;
 		//cout << "YES" << endl;
 	}
 	else {
 		IS_BOARD_CORRECT = false;
-		//cout << "NO" << endl;
+		if (file.is_open()) {
+			file << "NO" << endl << endl;
+		}
+		//cout << "NO" << endl << endl;
 	}
 	return IS_BOARD_CORRECT;
 }
@@ -54,7 +53,7 @@ vector<Cell*> Hex::getNeighbors(const Cell* cell) {
 	return neighbors;
 }
 
-bool Hex::beforeDFS(vector<vector<Cell>>& board_, const short& state, short& whoWon_) {
+bool Hex::beforeDFS(vector<vector<Cell>>& board, const short& state) {
 	// dla czerwonego gracza z gornego do dolnego
 	// pseudo win:
 	// 0 - nic
@@ -62,11 +61,12 @@ bool Hex::beforeDFS(vector<vector<Cell>>& board_, const short& state, short& who
 	// 2 - blue win (w rzecywistosci wygral czerwony gracz)
 	bool changed = false;
 	if (state != 1) {
-		for (auto c : board_[0]) {
+		for (auto c : board[0]) {
 			if (c.symbol == 'r') {
 				changed = true;
 				if (DFS(&c, true)) {
-					whoWon_ = 1;
+					whoWon = 1;
+					resetVisited();
 					return true;
 				}
 			}
@@ -81,10 +81,11 @@ bool Hex::beforeDFS(vector<vector<Cell>>& board_, const short& state, short& who
 	}
 	if (state != 2) {
 		for (int i = 0; i < lineCounter / 2; i++) {
-			if (board_[i][0].symbol == 'b') {
+			if (board[i][0].symbol == 'b') {
 				changed = true;
-				if (DFS(&board_[i][0], false)) {
-					whoWon_ = 2;
+				if (DFS(&board[i][0], false)) {
+					whoWon = 2;
+					resetVisited();
 					return true;
 				}
 			}
@@ -95,8 +96,8 @@ bool Hex::beforeDFS(vector<vector<Cell>>& board_, const short& state, short& who
 				}
 			}
 		}
-		whoWon_ = 0;
 	}
+	whoWon = 0;
 	return false;
 }
 
@@ -131,62 +132,62 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 		}
 	}
 	return false;
+}
 
+bool Hex::IS_GAME_OVER(const short& state, ofstream& file) {
+	if (get_IS_BOARD_CORRECT(file)) {
+		return beforeDFS(board, state);
+	}
+	return false;
 }
 
 void Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
-	if (get_IS_BOARD_CORRECT()) {
-		if (PAWNS_NUMBER == 0) {
-			if (file.is_open()) {
-				file << "YES" << endl << endl;
-			}
-			//cout << "YES" << endl;
-			return;
+	//uzyc is_game_over
+
+	if (PAWNS_NUMBER == 0) {
+		if (file.is_open()) {
+			file << "YES" << endl << endl;
 		}
-		if (!beforeDFS(board, state, whoWon)) {
-			if (file.is_open()) {
-				file << "YES" << endl << endl;
-			}
-			//cout << "YES" << endl;
-			return;
-		}
-		Hex temp = *this;
+		//cout << "YES" << endl;
+		return;
+	}
+	if (IS_GAME_OVER(state, file)) {
+		//if (!beforeDFS(board, state)) {
+		//	if (file.is_open()) {
+		//		file << "YES" << endl << endl;
+		//	}
+		//	//cout << "YES" << endl;
+		//	return;
+		//}
 
 		switch (whoWon) {
-		case 0: { // TIE
-			if (file.is_open()) {
-				//file << "NO" << endl << endl;
-			}
-			//cout << "NO" << endl;
-			break;
-		}
 		case 1: { // RED
 			if (BLUE_PAWNS + 1 == RED_PAWNS) {
-				bool isEnd = false;
-				/*if (file.is_open()) {
-					file << "YES" << endl << endl;
-				}*/
-
-				for (int i = 0; i < temp.lineCounter / 2; ++i) {
-					for (int j = 0; j < temp.lineCounter / 2; ++j) {
-						if (temp.board[i][j].symbol == 'r' && !isEnd) {
-							temp.board[i][j].symbol = ' ';
-							if (!temp.beforeDFS(temp.board, 2, temp.whoWon)) {
-								if (file.is_open()) {
-									file << "YES" << endl << endl;
-								}
-								isEnd = true;
-								//cout << "YES" << endl;
-							}
-							temp.resetVisited();
+				vector<bool> afterDFS;
+				for (int i = 0; i < lineCounter / 2; ++i) {
+					for (int j = 0; j < lineCounter / 2; ++j) {
+						if (board[i][j].symbol == 'r') {
+							board[i][j].symbol = ' ';
+							short st = 2;
+							afterDFS.push_back(beforeDFS(board, st));
+							board[i][j].symbol = 'r';
 						}
 					}
 				}
-
-				if (file.is_open() && !isEnd) {
-					file << "NO" << endl << endl;
+				for (auto b : afterDFS) {
+					if (b == false) {
+						if (file.is_open()) {
+							file << "YES" << endl << endl;
+						}
+						//cout << "YES" << endl << endl;
+						return;
+					}
 				}
-				//cout << "NO" << endl;
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+					return;
+				}
+				//cout << "NO" << endl << endl;
 			}
 			break;
 		}
@@ -196,43 +197,47 @@ void Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 					file << "NO" << endl << endl;
 				}
 				//cout << "NO" << endl;
+				return;
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
-				bool isEnd = false;
-				/*if (file.is_open()) {
-					file << "YES" << endl << endl;
-				}*/
-
-				for (int i = 0; i < temp.lineCounter / 2; ++i) {
-					for (int j = 0; j < temp.lineCounter / 2; ++j) {
-						if (temp.board[j][i].symbol == 'b' && !isEnd) {
-							temp.board[j][i].symbol = ' ';
-							if (!temp.beforeDFS(temp.board, 1, temp.whoWon)) {
-								if (file.is_open()) {
-									file << "YES" << endl << endl;
-								}
-								isEnd = true;
-								//cout << "YES" << endl;
-								break;
-							}
-							temp.resetVisited();
+				vector<bool> afterDFS;
+				for (int i = 0; i < lineCounter / 2; ++i) {
+					for (int j = 0; j < lineCounter / 2; ++j) {
+						if (board[i][j].symbol == 'b') {
+							board[i][j].symbol = ' ';
+							short st = 1;
+							afterDFS.push_back(beforeDFS(board, st));
+							board[i][j].symbol = 'b';
 						}
 					}
 				}
-
-				if (file.is_open() && !isEnd) {
-					file << "NO" << endl << endl;
+				for (auto b : afterDFS) {
+					if (b == false) {
+						if (file.is_open()) {
+							file << "YES" << endl << endl;
+						}
+						//cout << "YES" << endl << endl;
+						return;
+					}
 				}
-				//cout << "NO" << endl;
-			}
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+					return;
+				}
+				//cout << "NO" << endl << endl;
 			break;
 		}
 		}
 	}
+	}
 	else {
-		if (file.is_open()) {
-			file << "NO" << endl << endl;
+		if (whoWon == -1) {
+			return;
 		}
-		//cout << "NO" << endl;
+		if (file.is_open()) {
+			file << "YES" << endl << endl;
+		}
+		//cout << "YES" << endl << endl;
+		return;
 	}
 }
