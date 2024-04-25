@@ -11,7 +11,9 @@ void Hex::setPlayerSymbol(char s, const short& line, const short& cell) {
 }
 
 bool Hex::get_IS_BOARD_CORRECT(ofstream& file) {
-	if (BLUE_PAWNS + 1 == RED_PAWNS || BLUE_PAWNS == RED_PAWNS) {
+	size = lineCounter / 2;
+	empty_places = (size * size) - PAWNS_NUMBER;
+	if (BLUE_PAWNS == RED_PAWNS - 1 || BLUE_PAWNS == RED_PAWNS) {
 		IS_BOARD_CORRECT = true;
 		//cout << "YES" << endl;
 	}
@@ -26,7 +28,6 @@ bool Hex::get_IS_BOARD_CORRECT(ofstream& file) {
 }
 
 void Hex::resetVisited() {
-	short size = lineCounter / 2;
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size; j++) {
 			board[i][j].visited = false;
@@ -37,7 +38,6 @@ void Hex::resetVisited() {
 
 vector<Cell*> Hex::getNeighbors(const Cell* cell) { 
 	vector<Cell*> neighbors;
-	short size = lineCounter / 2;
 
 	short dLines[] = { -1, 0, 1, 1, 0, -1 };
 	short dPoses[] = { -1, -1, 0, 1, 1, 0 };
@@ -59,40 +59,24 @@ bool Hex::beforeDFS(vector<vector<Cell>>& board, const short& state) {
 	// 0 - nic
 	// 1 - red win (w rzecywistosci wygral niebieski gracz)
 	// 2 - blue win (w rzecywistosci wygral czerwony gracz)
-	bool changed = false;
 	if (state != 1) {
 		for (auto c : board[0]) {
 			if (c.symbol == 'r') {
-				changed = true;
 				if (DFS(&c, true)) {
 					whoWon = 1;
 					resetVisited();
 					return true;
 				}
 			}
-			else {
-				if (changed) {
-					resetVisited();
-					changed = false;
-				}
-			}
 		}
-		changed = false;
 	}
 	if (state != 2) {
-		for (int i = 0; i < lineCounter / 2; i++) {
+		for (int i = 0; i < size; i++) {
 			if (board[i][0].symbol == 'b') {
-				changed = true;
 				if (DFS(&board[i][0], false)) {
 					whoWon = 2;
 					resetVisited();
 					return true;
-				}
-			}
-			else {
-				if (changed) {
-					resetVisited();
-					changed = false;
 				}
 			}
 		}
@@ -114,7 +98,7 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 				// czerwony gracz
 				return true;
 			}
-			else if (c->pos == (lineCounter) / 2 - 1 && !isRed) {
+			else if (c->pos == size - 1 && !isRed) {
 				// niebieski gracz
 				return true;
 			}
@@ -123,7 +107,7 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 			}
 		}
 	}
-	if (lineCounter / 2 - 1 == 0) {
+	if (size - 1 == 0) {
 		if (isRed) {
 			return true;
 		}
@@ -141,31 +125,14 @@ bool Hex::IS_GAME_OVER(const short& state, ofstream& file) {
 	return false;
 }
 
-void Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
-	//uzyc is_game_over
-
-	if (PAWNS_NUMBER == 0) {
-		if (file.is_open()) {
-			file << "YES" << endl << endl;
-		}
-		//cout << "YES" << endl;
-		return;
-	}
+bool Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 	if (IS_GAME_OVER(state, file)) {
-		//if (!beforeDFS(board, state)) {
-		//	if (file.is_open()) {
-		//		file << "YES" << endl << endl;
-		//	}
-		//	//cout << "YES" << endl;
-		//	return;
-		//}
-
 		switch (whoWon) {
 		case 1: { // RED
-			if (BLUE_PAWNS + 1 == RED_PAWNS) {
+			if (BLUE_PAWNS == RED_PAWNS - 1) {
 				vector<bool> afterDFS;
-				for (int i = 0; i < lineCounter / 2; ++i) {
-					for (int j = 0; j < lineCounter / 2; ++j) {
+				for (int i = 0; i < size; ++i) {
+					for (int j = 0; j < size; ++j) {
 						if (board[i][j].symbol == 'r') {
 							board[i][j].symbol = ' ';
 							short st = 2;
@@ -176,33 +143,24 @@ void Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 				}
 				for (auto b : afterDFS) {
 					if (b == false) {
-						if (file.is_open()) {
-							file << "YES" << endl << endl;
-						}
-						//cout << "YES" << endl << endl;
-						return;
+						return true;
 					}
 				}
-				if (file.is_open()) {
-					file << "NO" << endl << endl;
-					return;
-				}
-				//cout << "NO" << endl << endl;
+				return false;
+			}
+			else if (BLUE_PAWNS == RED_PAWNS) {
+				return false;
 			}
 			break;
 		}
 		case 2: {// BLUE
-			if (BLUE_PAWNS + 1 == RED_PAWNS) {
-				if (file.is_open()) {
-					file << "NO" << endl << endl;
-				}
-				//cout << "NO" << endl;
-				return;
+			if (BLUE_PAWNS == RED_PAWNS - 1) {
+				return false;
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
 				vector<bool> afterDFS;
-				for (int i = 0; i < lineCounter / 2; ++i) {
-					for (int j = 0; j < lineCounter / 2; ++j) {
+				for (int i = 0; i < size; ++i) {
+					for (int j = 0; j < size; ++j) {
 						if (board[i][j].symbol == 'b') {
 							board[i][j].symbol = ' ';
 							short st = 1;
@@ -213,31 +171,102 @@ void Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 				}
 				for (auto b : afterDFS) {
 					if (b == false) {
-						if (file.is_open()) {
-							file << "YES" << endl << endl;
-						}
-						//cout << "YES" << endl << endl;
-						return;
+						return true;
 					}
 				}
-				if (file.is_open()) {
-					file << "NO" << endl << endl;
-					return;
-				}
-				//cout << "NO" << endl << endl;
+				return false;
+			}
 			break;
+
 		}
 		}
-	}
+		if (file.is_open()) {
+			file << "poza if w is_board_possible\n";
+		}
+		return false;
 	}
 	else {
 		if (whoWon == -1) {
-			return;
+			return false;
 		}
-		if (file.is_open()) {
-			file << "YES" << endl << endl;
+		return true;
+	}
+}
+
+bool Hex::CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state) {
+	if (IS_BOARD_POSSIBLE(file, state)) {
+		if (whoWon == 1 || whoWon == 2) {
+			return false;
 		}
-		//cout << "YES" << endl << endl;
-		return;
+		else {
+			countNaiveTurns(1, true);
+			if (turns <= empty_places) {
+				// zrobic dla kazdego przypadku kontainer, ktory bedzie 
+				// zbieral wyniki dfsa (line_length piona) dla gracza, ktory chce wygrac
+				// jesli gracz nie wygrywa, to sprawdzic caly kontainer na maksymalna liczbe line_length
+				// i dodac do tego miejsca pion 
+				// jesli kilka maksymalnych line_length, to wybrac pierwszy
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+void Hex::countNaiveTurns(const short& N, bool isRed) {
+	short turns = 0;
+	if (N == 1) {
+		if (isRed) {
+			if (RED_PAWNS == BLUE_PAWNS) {
+				redTurns = 1;
+				turns = 1;
+			}
+			else if (BLUE_PAWNS - 1 == RED_PAWNS) {
+				redTurns = 1;
+				blueTurns = 1;
+				turns = 2;
+			}
+		}
+		else {
+			if (RED_PAWNS - 1 == BLUE_PAWNS) {
+				blueTurns = 1;
+				turns = 1;
+			}
+			else if (BLUE_PAWNS == RED_PAWNS) {
+				redTurns = 1;
+				blueTurns = 1;
+				turns = 2;
+			}
+		}
+	}
+	else if (N == 2) {
+		if (isRed) {
+			if (RED_PAWNS == BLUE_PAWNS) {
+				redTurns = 2;
+				blueTurns = 1;
+				turns = 3;
+			}
+			else if (BLUE_PAWNS - 1 == RED_PAWNS) {
+				redTurns = 2;
+				blueTurns = 2;
+				turns = 4;
+			}
+		}
+		else {
+			if (RED_PAWNS == BLUE_PAWNS) {
+				redTurns = 2;
+				blueTurns = 2;
+				turns = 4;
+			}
+			else if (BLUE_PAWNS - 1 == RED_PAWNS) {
+				redTurns = 1;
+				blueTurns = 2;
+				turns = 3;
+			}
+		}
 	}
 }

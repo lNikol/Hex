@@ -32,6 +32,7 @@ int main()
 				if (file.is_open()) {
 					file << "YES" << endl << endl;
 				}
+				// cout << "YES" << endl << endl;
 			}
 			hex = Hex();
 		}
@@ -65,16 +66,44 @@ int main()
 
 		}
 		else if (line == "IS_BOARD_POSSIBLE") {
-			hex.IS_BOARD_POSSIBLE(file, state);
+			if (hex.PAWNS_NUMBER == 0) {
+				if (file.is_open()) {
+					file << "YES" << endl << endl;
+				}
+				//cout << "YES" << endl << endl;
+			}
+			else {
+				if (hex.IS_BOARD_POSSIBLE(file, state)) {
+					if (file.is_open()) {
+						file << "YES" << endl << endl;
+					}
+					//cout << "YES" << endl << endl;
+				}
+				else {
+					if (hex.IS_BOARD_CORRECT) {
+						if (file.is_open()) {
+							file << "NO" << endl << endl;
+						}
+						//cout << "NO" << endl << endl;
+
+					}
+				}
+			}
 			hex = Hex();
 
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
-			//if (hex.get_IS_BOARD_CORRECT()) {
+			if (hex.CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(file, state)) {
+				
 
-			//}
+			}
+			else {
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl << endl;
+			}
 			hex = Hex();
-
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_NAIVE_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT(file)) {
@@ -111,8 +140,7 @@ int main()
 			}
 			for (short int i = 0; i < line.size(); i++) {
 				switch (line[i])
-				{
-				
+				{				
 				case '<': {
 					char cell[5];
 					for (int j = 0; j < 5; j++) {
