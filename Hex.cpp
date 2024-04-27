@@ -4,6 +4,18 @@
 using namespace std;
 
 Hex::Hex() {
+
+}
+Hex::~Hex() {
+	for (short i = 0; i < ARR_SIZE; ++i) {
+		for (short j = 0; j < ARR_SIZE; ++j) {
+			delete board[i][j];
+		}
+	}
+	for (short i = 0; i < emptyCounter; ++i) {
+		emptyPlaces[i] = nullptr;
+		delete emptyPlaces[i];
+	}
 }
 
 void Hex::setPlayerSymbol(char s, const short& line, const short& cell) {
@@ -45,17 +57,16 @@ void Hex::resetVisited(const char& player) {
 	short temp = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
-			if (board[i][j].symbol != player) continue;
-			board[i][j].visited = false;
+			if (board[i][j]->symbol != player) continue;
+			board[i][j]->visited = false;
 			++temp;
 			if (temp >= testNumber) return;
 		}
 	}
 }
 
-vector<Cell*> Hex::getNeighbors(const Cell* cell) {
-	vector<Cell*> neighbors;
-
+void Hex::getNeighbors(Cell** neighbors, const Cell* cell, short& count) {
+	count = 0;
 	short dLines[] = { -1, 0, 1, 1, 0, -1 };
 	short dPoses[] = { -1, -1, 0, 1, 1, 0 };
 
@@ -63,11 +74,11 @@ vector<Cell*> Hex::getNeighbors(const Cell* cell) {
 		short newRow = cell->line + dLines[i];
 		short newCol = cell->pos + dPoses[i];
 		if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
-			if (board[newRow][newCol].symbol == cell->symbol) neighbors.push_back(&board[newRow][newCol]);
+			if (board[newRow][newCol]->symbol == cell->symbol) {
+				neighbors[count++] = board[newRow][newCol];
+			}
 		}
 	}
-
-	return neighbors;
 }
 
 bool Hex::beforeDFS(const short& state) {
@@ -82,8 +93,8 @@ bool Hex::beforeDFS(const short& state) {
 			testNumber = RED_PAWNS;
 		}
 		for (short i = 0; i < size; ++i) {
-			if (board[0][i].symbol == 'r') {
-				if (DFS(&board[0][i], true)) {
+			if (board[0][i]->symbol == 'r') {
+				if (DFS(board[0][i], true)) {
 					whoWon = 1;
 					resetVisited('r');
 					return true;
@@ -98,8 +109,8 @@ bool Hex::beforeDFS(const short& state) {
 			testNumber = BLUE_PAWNS;
 		}
 		for (short i = 0; i < size; ++i) {
-			if (board[i][0].symbol == 'b') {
-				if (DFS(&board[i][0], false)) {
+			if (board[i][0]->symbol == 'b') {
+				if (DFS(board[i][0], false)) {
 					whoWon = 2;
 					resetVisited('b');
 					return true;
@@ -113,24 +124,6 @@ bool Hex::beforeDFS(const short& state) {
 }
 
 bool Hex::DFS(Cell* cell, bool isRed) {
-	cell->visited = true; // usunac
-	vector<Cell*> neighbors = getNeighbors(cell);
-	for (auto* c : neighbors) {
-		if (c->visited == false) {
-			if (c->line == size - 1 && isRed) {
-				// ten warunek dla gracza czerwonego od lewej granicy do prawej
-				// czerwony gracz
-				return true;
-			}
-			else if (c->pos == size - 1 && !isRed) {
-				// niebieski gracz
-				return true;
-			}
-			if (DFS(c, isRed)) {
-				return true;
-			}
-		}
-	}
 	if (size - 1 == 0) {
 		if (isRed) {
 			return true;
@@ -138,7 +131,35 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 		else {
 			return false;
 		}
+	}	
+	cell->visited = true;
+	short count = 0;
+	Cell* neighbors[6] = { nullptr };
+	getNeighbors(neighbors, cell, count);
+
+	for (short i = 0; i < count; ++i) {
+		if (neighbors == nullptr || neighbors[i] == nullptr) {
+			for (short l = 0; l < count; ++l) {
+				neighbors[l] = { nullptr };
+			}
+			break;
+		}
+		if (neighbors != nullptr && neighbors[i]->visited == false) {
+			if (neighbors[i]->line == size - 1 && isRed) {
+				// ten warunek dla gracza czerwonego od lewej granicy do prawej
+				// czerwony gracz
+				return true;
+			}
+			else if (neighbors[i]->pos == size - 1 && !isRed) {
+				// niebieski gracz
+				return true;
+			}
+			if (DFS(neighbors[i], isRed)) {
+				return true;
+			}
+		}
 	}
+	
 	return false;
 }
 
@@ -153,14 +174,12 @@ void Hex::checkPositions(vector<bool>& afterDFS, const short& st, const char& pl
 	// player może być r, b lub ' '
 	// ta funkcja jest używana w naive i is_board_possible
 	if (player == ' ') {
-		for (short i = 0; i < emptyPlaces.size(); ++i) {
-			short y = emptyPlaces[i].first;
-			short x = emptyPlaces[i].second;
-			board[y][x].symbol = symbol;
+		for (short i = 0; i < emptyCounter; ++i) {
+			emptyPlaces[i]->symbol = symbol;
 			updateStats(symbol, 1);
 			afterDFS.push_back(beforeDFS(st));
 			updateStats(symbol, -1);
-			board[y][x].symbol = player;
+			emptyPlaces[i]->symbol = player;
 		}
 		return;
 	}
@@ -168,10 +187,10 @@ void Hex::checkPositions(vector<bool>& afterDFS, const short& st, const char& pl
 	updateStats(player, 1);
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
-			if (board[i][j].symbol == player) {
-				board[i][j].symbol = symbol;
+			if (board[i][j]->symbol == player) {
+				board[i][j]->symbol = symbol;
 				afterDFS.push_back(beforeDFS(st));
-				board[i][j].symbol = player;
+				board[i][j]->symbol = player;
 			}
 		}
 	}
@@ -186,7 +205,7 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 				vector<bool> afterDFS;
 				checkPositions(afterDFS, 2, 'r', ' ');
 				for (auto b : afterDFS) {
-					if (b == false) {
+					if (!b) {
 						return true;
 					}
 				}
@@ -205,7 +224,7 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 				vector<bool> afterDFS;
 				checkPositions(afterDFS, 1, 'b', ' ');
 				for (auto b : afterDFS) {
-					if (b == false) {
+					if (!b) {
 						return true;
 					}
 				}
@@ -285,7 +304,7 @@ bool Hex::CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, const char& 
 		}
 		else {
 			countNaiveTurns(1, isRed);
-			if (turns <= emptyPlaces.size()) {
+			if (turns <= emptyCounter) {
 				vector<bool> afterDFS;
 				short st = player == 'r' ? 2 : 1;
 				checkPositions(afterDFS, st, ' ', player);
@@ -327,31 +346,26 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 		}
 		else {
 			countNaiveTurns(2, isRed);
-			if (turns <= emptyPlaces.size()) {
+			if (turns <= emptyCounter) {
 				vector<bool> afterDFS;
-				for (short i = 0; i < emptyPlaces.size(); ++i) {
-					short y1 = 0, x1 = 0, y2 = 0, x2 = 0;
-					y1 = emptyPlaces[i].first;
-					x1 = emptyPlaces[i].second;
-					for (short j = i + 1; j < emptyPlaces.size(); ++j) {
-						y2 = emptyPlaces[j].first;
-						x2 = emptyPlaces[j].second;
-						board[y1][x1].symbol = player;
-						board[y2][x2].symbol = player;
+				for (short i = 0; i < emptyCounter; ++i) {
+					for (short j = i + 1; j < emptyCounter; ++j) {
+						emptyPlaces[i]->symbol = player;
+						emptyPlaces[j]->symbol = player;
 						short st = player == 'r' ? 2 : 1;
 						updateStats(player, 2);
 						if (beforeDFS(st)) {
 							updateStats(player, -1);
+							emptyPlaces[i]->symbol = ' ';
 
-							board[y1][x1].symbol = ' ';
 							bool first = beforeDFS(st);
-							board[y1][x1].symbol = player;
+							emptyPlaces[i]->symbol = player;
 							bool second;
 
 							if (first) {
-								board[y2][x2].symbol = ' ';
+								emptyPlaces[j]->symbol = ' ';
 								second = beforeDFS(st);
-								board[y2][x2].symbol = player;
+								emptyPlaces[j]->symbol = player;
 							}
 							else {
 								second = true;
@@ -368,8 +382,8 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 						else {
 							updateStats(player, -2);
 						}
-						board[y1][x1].symbol = ' ';
-						board[y2][x2].symbol = ' ';
+						emptyPlaces[i]->symbol = ' ';
+						emptyPlaces[j]->symbol = ' ';
 					}
 
 				}

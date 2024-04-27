@@ -1,5 +1,4 @@
 ﻿#include <iostream>
-#include <vector>
 #include <string>
 #include <fstream>
 #include "Hex.h"
@@ -15,11 +14,13 @@ int main()
 		if (line == "BOARD_SIZE") {
 			file << hex.lineCounter / 2 << endl << endl;
 			//printf("%d\n\n", hex.lineCounter / 2);
+			hex.~Hex(); 
 			hex = Hex();
 		}
 		else if (line == "PAWNS_NUMBER") {
 			file << hex.PAWNS_NUMBER << endl << endl;
 			//printf("%d\n\n", hex.PAWNS_NUMBER);
+			hex.~Hex(); 
 			hex = Hex();
 		}
 		else if (line == "IS_BOARD_CORRECT") {
@@ -31,7 +32,7 @@ int main()
 				file << "NO\n\n";
 				//printf("NO\n\n");
 			}
-			hex = Hex();
+			hex.~Hex(); hex = Hex();
 		}
 		else if (line == "IS_GAME_OVER") {
 			if (hex.IS_GAME_OVER(state)) {
@@ -56,6 +57,7 @@ int main()
 				file << "NO\n\n";
 				//printf("NO\n\n");
 			}
+			hex.~Hex(); 
 			hex = Hex();
 		}
 		else if (line == "IS_BOARD_POSSIBLE") {
@@ -73,6 +75,7 @@ int main()
 					//printf("NO\n\n");
 				}
 			}
+			hex.~Hex(); 
 			hex = Hex();
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
@@ -117,18 +120,21 @@ int main()
 				file << "NO\n\n";
 				//printf("NO\n\n");
 			}
+			hex.~Hex(); 
 			hex = Hex();
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT()) {
 
 			}
+			hex.~Hex(); 
 			hex = Hex();
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT()) {
 
 			}
+			hex.~Hex();
 			hex = Hex();
 		}
 		else {
@@ -157,30 +163,29 @@ int main()
 
 					switch (cell[2]) {
 					case 'r': {
-						hex.board[counter].push_back(Cell(cell[2], counter, hex.board[counter].size()));
+						hex.board[counter][hex.indexes[counter]++] = new Cell(cell[2], counter, hex.indexes[counter]);
 						++hex.RED_PAWNS;
 						++hex.PAWNS_NUMBER;
 						break;
 					}
 					case 'b': {
-						hex.board[counter].push_back(Cell(cell[2], counter, hex.board[counter].size()));
+						hex.board[counter][hex.indexes[counter]++] = new Cell(cell[2], counter, hex.indexes[counter]);
 						++hex.BLUE_PAWNS;
 						++hex.PAWNS_NUMBER;
 						break;
 					}
 					case ' ': {
-						short size_ = hex.board[counter].size();
-						hex.board[counter].push_back(Cell(cell[2], counter, size_));
-						hex.emptyPlaces.push_back(make_pair(counter, size_));
+						short size_ = hex.indexes[counter]++;
+						hex.board[counter][size_] = new Cell(cell[2], counter, size_);
+						hex.emptyPlaces[hex.emptyCounter++] = hex.board[counter][size_];
 					}
-					default: {
+					default: {  
 						break;
 					}
 					}
-					counter++;
+					++counter;
 					break;
 				}
-
 				default: {
 					break;
 				}

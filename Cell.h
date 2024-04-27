@@ -5,9 +5,9 @@ struct Cell {
 	short line, pos;
 	bool visited = false;
 	//bool toBeVisited = false;
-	Cell(char s, short l, short pos_in_vector) {
+	Cell(char s, short l, short p) {
 		symbol = s;
 		line = l;
-		pos = pos_in_vector;
+		pos = p;
 	}
 };

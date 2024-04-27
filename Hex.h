@@ -3,9 +3,12 @@
 #include <string>
 #include "Cell.h"
 using namespace std;
+const short ARR_SIZE = 11;
 
 struct Hex {
-	vector<vector<Cell>> board = vector<vector<Cell>>(11);
+	short indexes[ARR_SIZE] = { 0 };
+	Cell* board[ARR_SIZE][ARR_SIZE] = { nullptr };
+
 	bool isMaxOldSet = false;
 	short oldTags = 0, maxOldTags = 0;
 	short whoWon = -1; //0 - tie, 1 - red, 2 - blue
@@ -18,14 +21,15 @@ struct Hex {
 	short BLUE_PAWNS = 0;
 	short testNumber = 0;
 	bool IS_BOARD_CORRECT = false;
-	vector<pair<short, short>> emptyPlaces;
+	Cell* emptyPlaces[ARR_SIZE * ARR_SIZE] = { nullptr };
+	short emptyCounter = 0;
 
 	Hex();
 	void setPlayerSymbol(char s, const short& line, const short& cell);
 	void updateStats(const char& player, const short& n);
 	bool get_IS_BOARD_CORRECT();
 	void resetVisited(const char& player);
-	vector<Cell*> getNeighbors(const Cell* cell);
+	void getNeighbors(Cell** neighbors, const Cell* cell, short& count);
 	bool beforeDFS(const short& state);
 	bool DFS(Cell* cell, bool isRed);
 	bool IS_GAME_OVER(const short& state);
@@ -39,4 +43,5 @@ struct Hex {
 	bool CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char& player, bool isRed);
 	bool CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state);
 	bool CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state);
+	~Hex();
 };
