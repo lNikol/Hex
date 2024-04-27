@@ -3,10 +3,9 @@
 #include <string>
 #include "Cell.h"
 using namespace std;
-const size_t SIZE = 11;
 
 struct Hex {
-	vector<vector<Cell>> board = vector<vector<Cell>>(SIZE);
+	vector<vector<Cell>> board = vector<vector<Cell>>(11);
 	bool isMaxOldSet = false;
 	short oldTags = 0, maxOldTags = 0;
 	short whoWon = -1; //0 - tie, 1 - red, 2 - blue
@@ -18,17 +17,25 @@ struct Hex {
 	short RED_PAWNS = 0;
 	short BLUE_PAWNS = 0;
 	bool IS_BOARD_CORRECT = false;
-
+	vector<pair<short, short>> emptyPlaces;
 
 	Hex();
 	void setPlayerSymbol(char s, const short& line, const short& cell);
 	bool get_IS_BOARD_CORRECT(ofstream& file);
 	void resetVisited();
 	vector<Cell*> getNeighbors(const Cell* cell);
-	bool beforeDFS(vector<vector<Cell>>& board, const short& state);
+	bool beforeDFS(const short& state);
 	bool DFS(Cell* cell, bool isRed);
 	bool IS_GAME_OVER(const short& state, ofstream& file);
+	void checkPositions(vector<bool>& afterDFS, const short& st, const char& player, const char& symbol);
 	bool IS_BOARD_POSSIBLE(ofstream& file, const short& state);
-	bool CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state);
 	void countNaiveTurns(const short& N, bool isRed);
-};
+	
+	bool CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state, const char& player, bool isRed);
+	bool CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state);
+	bool CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state);
+	vector<pair<short, short>> getEmptyPlaces();
+	bool CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(ofstream& file, const short& state, const char& player, bool isRed);
+	bool CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(ofstream& file, const short& state);
+	bool CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(ofstream& file, const short& state);
+}; 

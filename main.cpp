@@ -8,23 +8,22 @@ using namespace std;
 int main()
 {
 	ofstream file("temp.txt");
-
 	Hex hex;
 	string line;
 	short state = 0;
 	while (getline(cin, line)) {
 		if (line == "BOARD_SIZE") {
-			//cout << hex.lineCounter / 2 << endl << endl;
 			if (file.is_open()) {
 				file << hex.lineCounter / 2 << endl << endl;
 			}
+			//cout << hex.lineCounter / 2 << endl << endl;
 			hex = Hex();
 		}
 		else if (line == "PAWNS_NUMBER") {
-			//cout << hex.PAWNS_NUMBER << endl;
 			if (file.is_open()) {
 				file << hex.PAWNS_NUMBER << endl << endl;
 			}
+			//cout << hex.PAWNS_NUMBER << endl;
 			hex = Hex();
 		}
 		else if (line == "IS_BOARD_CORRECT") {
@@ -34,10 +33,16 @@ int main()
 				}
 				// cout << "YES" << endl << endl;
 			}
+			else {
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl << endl;
+			}
 			hex = Hex();
 		}
 		else if (line == "IS_GAME_OVER") {
-			hex.IS_GAME_OVER(state, file);
+			if (hex.IS_GAME_OVER(state, file)) {
 				switch (hex.whoWon) {
 				case 0:
 					if (file.is_open()) {
@@ -59,11 +64,16 @@ int main()
 					//cout << "YES BLUE" << endl << endl;
 					break;
 				}
-				
-			}
-		
-			hex = Hex();
 
+				}
+			}
+			else {
+				if (file.is_open()) {
+					file << "NO" << endl << endl;
+				}
+				//cout << "NO" << endl << endl;
+			}
+			hex = Hex();
 		}
 		else if (line == "IS_BOARD_POSSIBLE") {
 			if (hex.PAWNS_NUMBER == 0) {
@@ -80,13 +90,10 @@ int main()
 					//cout << "YES" << endl << endl;
 				}
 				else {
-					if (hex.IS_BOARD_CORRECT) {
-						if (file.is_open()) {
-							file << "NO" << endl << endl;
-						}
-						//cout << "NO" << endl << endl;
-
+					if (file.is_open()) {
+						file << "NO" << endl << endl;
 					}
+					//cout << "NO" << endl << endl;
 				}
 			}
 			hex = Hex();
@@ -94,38 +101,80 @@ int main()
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
 			if (hex.CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(file, state)) {
-				
-
+				if (file.is_open()) {
+					file << "YES" << endl;
+				}
+				//cout << "YES" << endl;
 			}
 			else {
 				if (file.is_open()) {
-					file << "NO" << endl << endl;
+					file << "NO" << endl;
 				}
-				//cout << "NO" << endl << endl;
+				//cout << "NO" << endl;
 			}
-			hex = Hex();
+			hex.whoWon = -1;
 		}
-		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_NAIVE_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT(file)) {
-
+		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT") {
+			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(file, state)) {
+				if (file.is_open()) {
+					file << "YES" << endl;
+				}
+				//cout << "YES" << endl;
 			}
-			hex = Hex();
+			else {
+				if (file.is_open()) {
+					file << "NO" << endl;
+				}
+				//cout << "NO" << endl;
+			}
+			hex.whoWon = -1;
+		}
+		else if (line == "CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
+			if (hex.CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(file, state)) {
+				if (file.is_open()) {
+					file << "YES" << endl;
+				}
+				//cout << "YES" << endl;
+			}
+			else {
+				if (file.is_open()) {
+					file << "NO" << endl;
+				}
+				//cout << "NO" << endl;
+			}
+			hex.whoWon = -1;
+		}
+		else if (line == "CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT") {
+				if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(file, state)) {
+					if (file.is_open()) {
+						file << "YES" << endl << endl;
+					}
+					//cout << "YES" << endl << endl;
+				}
+				else {
+					if (file.is_open()) {
+						file << "NO" << endl << endl;
+					}
+					//cout << "NO" << endl << endl;
+				}
+				hex = Hex();
 
 		}
+
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT(file)) {
 
 			}
 			hex = Hex();
 		}
-		else if (line == "CAN_RED_WIN_IN_2_MOVE_WITH_PERFECT_OPPONENT") {
+		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
 			if (hex.get_IS_BOARD_CORRECT(file)) {
 
 			}
 			hex = Hex();
 		}
 		else {
-			int tagCounter = 0; for (char c : line) { if (c == '<') tagCounter++; }
+			short tagCounter = 0; for (char c : line) { if (c == '<') tagCounter++; }
 			short counter; // liczy linii i dzieki niemu 
 			// odpowiednio dodaje Cell do hex 11x11, ktory jest tablica
 			if (hex.oldTags > tagCounter) {
@@ -138,12 +187,12 @@ int main()
 			else {
 				counter = 0;
 			}
-			for (short int i = 0; i < line.size(); i++) {
+			for (short i = 0; i < line.size(); i++) {
 				switch (line[i])
 				{				
 				case '<': {
 					char cell[5];
-					for (int j = 0; j < 5; j++) {
+					for (short j = 0; j < 5; j++) {
 						cell[j] = line[i + j];
 					}
 					i += 4; // symbol '>' in line
@@ -162,8 +211,9 @@ int main()
 						break;
 					}
 					case ' ': {
-						hex.board[counter].push_back(Cell(cell[2], counter, hex.board[counter].size()));
-						break;
+						short size_ = hex.board[counter].size();
+						hex.board[counter].push_back(Cell(cell[2], counter, size_));
+						hex.emptyPlaces.push_back(make_pair(counter, size_));
 					}
 					default: {
 						break;
@@ -183,7 +233,6 @@ int main()
 			}
 			hex.oldTags = counter;
 		}
-
 	}
 	file.close();
 

@@ -19,17 +19,13 @@ bool Hex::get_IS_BOARD_CORRECT(ofstream& file) {
 	}
 	else {
 		IS_BOARD_CORRECT = false;
-		if (file.is_open()) {
-			file << "NO" << endl << endl;
-		}
-		//cout << "NO" << endl << endl;
 	}
 	return IS_BOARD_CORRECT;
 }
 
 void Hex::resetVisited() {
-	for (int i = 0; i < size; i++) {
-		for (int j = 0; j < size; j++) {
+	for (short i = 0; i < size; i++) {
+		for (short j = 0; j < size; j++) {
 			board[i][j].visited = false;
 			board[i][j].toBeVisited = false; // zastanowic sie nad tym czy warto zostawic
 		}
@@ -53,31 +49,33 @@ vector<Cell*> Hex::getNeighbors(const Cell* cell) {
 	return neighbors;
 }
 
-bool Hex::beforeDFS(vector<vector<Cell>>& board, const short& state) {
+bool Hex::beforeDFS(const short& state) {
 	// dla czerwonego gracza z gornego do dolnego
 	// pseudo win:
 	// 0 - nic
 	// 1 - red win (w rzecywistosci wygral niebieski gracz)
 	// 2 - blue win (w rzecywistosci wygral czerwony gracz)
 	if (state != 1) {
-		for (auto c : board[0]) {
-			if (c.symbol == 'r') {
-				if (DFS(&c, true)) {
+		for (short i = 0; i < size; i++) {
+			if (board[0][i].symbol == 'r') {
+				if (DFS(&board[0][i], true)) {
 					whoWon = 1;
 					resetVisited();
 					return true;
 				}
+				resetVisited();
 			}
 		}
 	}
 	if (state != 2) {
-		for (int i = 0; i < size; i++) {
+		for (short i = 0; i < size; i++) {
 			if (board[i][0].symbol == 'b') {
 				if (DFS(&board[i][0], false)) {
 					whoWon = 2;
 					resetVisited();
 					return true;
 				}
+				resetVisited();
 			}
 		}
 	}
@@ -86,13 +84,10 @@ bool Hex::beforeDFS(vector<vector<Cell>>& board, const short& state) {
 }
 
 bool Hex::DFS(Cell* cell, bool isRed) {
-	// przed wywolaniem dfs, zrobic for, ktory bedzie chodzil po wszystkim komorkach
-	// i jesli dfs = false wywolac kolejny dfs dla kolejnej komorki, ale przed tym wywolac resetVisited
-	cell->visited = true;
+	cell->visited = true; // usunac
 	vector<Cell*> neighbors = getNeighbors(cell);
 	for (auto* c : neighbors) {
 		if (c->symbol == cell->symbol && c->visited == false && c->symbol!=' ') {
-			c->visited = true;
 			if (c->line == (lineCounter) / 2 - 1 && isRed) {
 				// ten warunek dla gracza czerwonego od lewej granicy do prawej
 				// czerwony gracz
@@ -120,9 +115,23 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 
 bool Hex::IS_GAME_OVER(const short& state, ofstream& file) {
 	if (get_IS_BOARD_CORRECT(file)) {
-		return beforeDFS(board, state);
+		return beforeDFS(state);
 	}
 	return false;
+}
+
+void Hex::checkPositions(vector<bool>& afterDFS, const short& st, const char& player, const char& symbol) {
+	// player może być r, b lub ' '
+	// ta funkcja jest używana w naive i is_board_possible
+	for (short i = 0; i < size; ++i) {
+		for (short j = 0; j < size; ++j) {
+			if (board[i][j].symbol == player) {
+				board[i][j].symbol = symbol;
+				afterDFS.push_back(beforeDFS(st));
+				board[i][j].symbol = player;
+			}
+		}
+	}
 }
 
 bool Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
@@ -131,16 +140,7 @@ bool Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 		case 1: { // RED
 			if (BLUE_PAWNS == RED_PAWNS - 1) {
 				vector<bool> afterDFS;
-				for (int i = 0; i < size; ++i) {
-					for (int j = 0; j < size; ++j) {
-						if (board[i][j].symbol == 'r') {
-							board[i][j].symbol = ' ';
-							short st = 2;
-							afterDFS.push_back(beforeDFS(board, st));
-							board[i][j].symbol = 'r';
-						}
-					}
-				}
+				checkPositions(afterDFS, 2, 'r', ' ');
 				for (auto b : afterDFS) {
 					if (b == false) {
 						return true;
@@ -159,16 +159,7 @@ bool Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
 				vector<bool> afterDFS;
-				for (int i = 0; i < size; ++i) {
-					for (int j = 0; j < size; ++j) {
-						if (board[i][j].symbol == 'b') {
-							board[i][j].symbol = ' ';
-							short st = 1;
-							afterDFS.push_back(beforeDFS(board, st));
-							board[i][j].symbol = 'b';
-						}
-					}
-				}
+				checkPositions(afterDFS, 1, 'b', ' ');
 				for (auto b : afterDFS) {
 					if (b == false) {
 						return true;
@@ -180,9 +171,6 @@ bool Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 
 		}
 		}
-		if (file.is_open()) {
-			file << "poza if w is_board_possible\n";
-		}
 		return false;
 	}
 	else {
@@ -193,39 +181,14 @@ bool Hex::IS_BOARD_POSSIBLE(ofstream& file, const short& state) {
 	}
 }
 
-bool Hex::CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state) {
-	if (IS_BOARD_POSSIBLE(file, state)) {
-		if (whoWon == 1 || whoWon == 2) {
-			return false;
-		}
-		else {
-			countNaiveTurns(1, true);
-			if (turns <= empty_places) {
-				// zrobic dla kazdego przypadku kontainer, ktory bedzie 
-				// zbieral wyniki dfsa (line_length piona) dla gracza, ktory chce wygrac
-				// jesli gracz nie wygrywa, to sprawdzic caly kontainer na maksymalna liczbe line_length
-				// i dodac do tego miejsca pion 
-				// jesli kilka maksymalnych line_length, to wybrac pierwszy
-			}
-			else {
-				return false;
-			}
-		}
-	}
-	else {
-		return false;
-	}
-}
-
 void Hex::countNaiveTurns(const short& N, bool isRed) {
-	short turns = 0;
 	if (N == 1) {
 		if (isRed) {
 			if (RED_PAWNS == BLUE_PAWNS) {
 				redTurns = 1;
 				turns = 1;
 			}
-			else if (BLUE_PAWNS - 1 == RED_PAWNS) {
+			else if (BLUE_PAWNS == RED_PAWNS - 1) {
 				redTurns = 1;
 				blueTurns = 1;
 				turns = 2;
@@ -250,7 +213,8 @@ void Hex::countNaiveTurns(const short& N, bool isRed) {
 				blueTurns = 1;
 				turns = 3;
 			}
-			else if (BLUE_PAWNS - 1 == RED_PAWNS) {
+			else if (BLUE_PAWNS == RED_PAWNS - 1) {
+				// tura niebieskiego
 				redTurns = 2;
 				blueTurns = 2;
 				turns = 4;
@@ -262,11 +226,138 @@ void Hex::countNaiveTurns(const short& N, bool isRed) {
 				blueTurns = 2;
 				turns = 4;
 			}
-			else if (BLUE_PAWNS - 1 == RED_PAWNS) {
+			else if (BLUE_PAWNS == RED_PAWNS - 1) {
 				redTurns = 1;
 				blueTurns = 2;
 				turns = 3;
 			}
 		}
 	}
+}
+
+bool Hex::CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state, const char& player, bool isRed) {
+	if (IS_BOARD_POSSIBLE(file, state)) {
+		if (whoWon == 1 || whoWon == 2) {
+			return false;
+		}
+		else {
+			countNaiveTurns(1, isRed);
+			if (turns <= empty_places) {
+				vector<bool> afterDFS;
+				short st = player == 'r' ? 2 : 1;
+				checkPositions(afterDFS, st, ' ', player);
+				for (auto b : afterDFS) {
+					if (b) {
+						return true;
+					}
+				}
+				return false;
+				// mini-max
+				// zrobic dla kazdego przypadku kontainer, ktory bedzie 
+				// zbieral wyniki dfsa (line_length piona) dla gracza, ktory chce wygrac
+				// jesli gracz nie wygrywa, to sprawdzic caly kontainer na maksymalna liczbe line_length
+				// i dodac do tego miejsca pion 
+				// jesli kilka maksymalnych line_length, to wybrac pierwszy
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+bool Hex::CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state) {
+	return CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(file, state, 'r', true);
+}
+
+bool Hex::CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(ofstream& file, const short& state) {
+	return CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(file, state, 'b', false);
+}
+
+vector<pair<short, short>> Hex::getEmptyPlaces() {
+	vector<pair<short, short>> emptyPlaces;
+	// zastanowic sie nad szybkoscia tej funkcji
+	for (short i = 0; i < size; ++i) {
+		for (short j = 0; j < size; ++j) {
+			if (board[i][j].symbol == ' ') {
+				emptyPlaces.push_back(make_pair(i, j));
+			}
+		}
+	}
+	return emptyPlaces;
+}
+
+bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(ofstream& file, const short& state, const char& player, bool isRed) {
+	if (IS_BOARD_POSSIBLE(file, state)) {
+		if (whoWon == 1 || whoWon == 2) {
+			return false;
+		}
+		else {
+			countNaiveTurns(2, isRed);
+			if (turns <= empty_places) {
+				vector<bool> afterDFS;
+				for (short i = 0; i < emptyPlaces.size(); ++i) {
+					short y1 = 0, x1 = 0, y2 = 0, x2 = 0;
+					y1 = emptyPlaces[i].first;
+					x1 = emptyPlaces[i].second;
+					for (short j = 0; j < emptyPlaces.size(); ++j) {
+						if (emptyPlaces[j] != emptyPlaces[i]) {
+							y2 = emptyPlaces[j].first;
+							x2 = emptyPlaces[j].second;
+							board[y1][x1].symbol = player;
+							board[y2][x2].symbol = player;
+							if (beforeDFS(state)) {
+								board[y1][x1].symbol = ' ';
+								bool first = beforeDFS(state);
+								board[y1][x1].symbol = player;
+								bool second;
+
+								if (first) {
+									board[y2][x2].symbol = ' ';
+									second = beforeDFS(state);
+									board[y2][x2].symbol = player;
+								}
+								else {
+									second = true;
+								}
+
+								if (first && second) {
+									afterDFS.push_back(false);
+								}
+								else {
+									afterDFS.push_back(true);
+								}
+							}
+							board[y1][x1].symbol = ' ';
+							board[y2][x2].symbol = ' ';
+						}
+					}
+					
+				}
+				for (auto b : afterDFS) {
+					if (b) {
+						return true;
+					}
+				}
+				return false;
+				}
+			else {
+				return false;
+			}
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+bool Hex::CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(ofstream& file, const short& state) {
+	return CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(file, state, 'r', true);
+}
+
+bool Hex::CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(ofstream& file, const short& state) {
+	return CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(file, state, 'b', false);
 }
