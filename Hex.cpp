@@ -22,27 +22,6 @@ void Hex::setPlayerSymbol(char s, const short& line, const short& cell) {
 
 }
 
-
-void Hex::updateStats(const char& player, const short& n) {
-	if (player == 'r') {
-		if (RED_PAWNS + n >= 0) {
-			testNumber = RED_PAWNS + n;
-		}
-		else {
-			testNumber = RED_PAWNS;
-		}
-	}
-	else if (player == 'b' && BLUE_PAWNS + n >= 0) {
-		testNumber = BLUE_PAWNS + n;
-		if (BLUE_PAWNS + n >= 0) {
-			testNumber = BLUE_PAWNS + n;
-		}
-		else {
-			testNumber = BLUE_PAWNS;
-		}
-	}
-}
-
 bool Hex::get_IS_BOARD_CORRECT() {
 	if (BLUE_PAWNS == RED_PAWNS - 1 || BLUE_PAWNS == RED_PAWNS) {
 		IS_BOARD_CORRECT = true;
@@ -54,13 +33,13 @@ bool Hex::get_IS_BOARD_CORRECT() {
 }
 
 void Hex::resetVisited(const char& player) {
-	short temp = 0;
+	//short temp = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
 			if (board[i][j]->symbol != player) continue;
 			board[i][j]->visited = false;
-			++temp;
-			if (temp >= testNumber) return;
+			/*++temp;
+			if (temp++ >= testNumber) return;*/
 		}
 	}
 }
@@ -89,9 +68,9 @@ bool Hex::beforeDFS(const short& state) {
 	// 2 - blue win (w rzecywistosci wygral czerwony gracz)
 
 	if (state != 1) {
-		if (state == 0) {
+		/*if (state == 0) {
 			testNumber = RED_PAWNS;
-		}
+		}*/
 		for (short i = 0; i < size; ++i) {
 			if (board[0][i]->symbol == 'r') {
 				if (DFS(board[0][i], true)) {
@@ -105,9 +84,9 @@ bool Hex::beforeDFS(const short& state) {
 	}
 
 	if (state != 2) {
-		if (state == 0) {
+		/*if (state == 0) {
 			testNumber = BLUE_PAWNS;
-		}
+		}*/
 		for (short i = 0; i < size; ++i) {
 			if (board[i][0]->symbol == 'b') {
 				if (DFS(board[i][0], false)) {
@@ -131,7 +110,7 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 		else {
 			return false;
 		}
-	}	
+	}
 	cell->visited = true;
 	short count = 0;
 	Cell* neighbors[6] = { nullptr };
@@ -159,7 +138,7 @@ bool Hex::DFS(Cell* cell, bool isRed) {
 			}
 		}
 	}
-	
+
 	return false;
 }
 
@@ -176,15 +155,12 @@ void Hex::checkPositions(vector<bool>& afterDFS, const short& st, const char& pl
 	if (player == ' ') {
 		for (short i = 0; i < emptyCounter; ++i) {
 			emptyPlaces[i]->symbol = symbol;
-			updateStats(symbol, 1);
 			afterDFS.push_back(beforeDFS(st));
-			updateStats(symbol, -1);
 			emptyPlaces[i]->symbol = player;
 		}
 		return;
 	}
 
-	updateStats(player, 1);
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
 			if (board[i][j]->symbol == player) {
@@ -194,7 +170,6 @@ void Hex::checkPositions(vector<bool>& afterDFS, const short& st, const char& pl
 			}
 		}
 	}
-	updateStats(player, -1);
 }
 
 bool Hex::IS_BOARD_POSSIBLE(const short& state) {
@@ -206,6 +181,7 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 				checkPositions(afterDFS, 2, 'r', ' ');
 				for (auto b : afterDFS) {
 					if (!b) {
+						whoWon = 1;
 						return true;
 					}
 				}
@@ -225,6 +201,7 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 				checkPositions(afterDFS, 1, 'b', ' ');
 				for (auto b : afterDFS) {
 					if (!b) {
+						whoWon = 2;
 						return true;
 					}
 				}
@@ -353,9 +330,7 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 						emptyPlaces[i]->symbol = player;
 						emptyPlaces[j]->symbol = player;
 						short st = player == 'r' ? 2 : 1;
-						updateStats(player, 2);
 						if (beforeDFS(st)) {
-							updateStats(player, -1);
 							emptyPlaces[i]->symbol = ' ';
 
 							bool first = beforeDFS(st);
@@ -377,10 +352,6 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 							else {
 								afterDFS.push_back(true);
 							}
-							updateStats(player, -1);
-						}
-						else {
-							updateStats(player, -2);
 						}
 						emptyPlaces[i]->symbol = ' ';
 						emptyPlaces[j]->symbol = ' ';

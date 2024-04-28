@@ -26,7 +26,6 @@ struct Hex {
 
 	Hex();
 	void setPlayerSymbol(char s, const short& line, const short& cell);
-	void updateStats(const char& player, const short& n);
 	bool get_IS_BOARD_CORRECT();
 	void resetVisited(const char& player);
 	void getNeighbors(Cell** neighbors, const Cell* cell, short& count);
