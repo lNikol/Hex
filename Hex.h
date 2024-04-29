@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <vector>
 #include <string>
 #include "Cell.h"
 using namespace std;
@@ -32,7 +31,7 @@ struct Hex {
 	bool beforeDFS(const short& state);
 	bool DFS(Cell* cell, bool isRed);
 	bool IS_GAME_OVER(const short& state);
-	void checkPositions(vector<bool>& afterDFS, bool isPerfect, const short& st, const char& player, const char& symbol, vector<Cell*>* perfectPlayerTurns);
+	void checkPositions(short afterDFS[], bool isPerfect, const short& st, const char& player, const char& symbol, Cell** perfectPlayerTurns);
 	bool IS_BOARD_POSSIBLE(const short& state);
 	void countPlayersTurns(const short& N, bool isRed);
 	void updateStats(const char& s, const short& n);
@@ -50,7 +49,7 @@ struct Hex {
 	bool CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state);
 	bool CAN_BLUE_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state);
 
-	void CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(vector<bool>& afterDFS, const short& state, const char& player);
+	void CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(short afterDFS[], const short& state, const char& player);
 	bool CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const char& player, bool isRed);
 	bool CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(const short& state);
 	bool CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(const short& state);

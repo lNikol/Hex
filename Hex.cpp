@@ -38,10 +38,8 @@ void Hex::resetVisited(const char& player) {
 	//short temp = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
-			if (board[i][j]->symbol != player) continue;
+			//if (board[i][j]->symbol != player) continue;
 			board[i][j]->visited = false;
-			/*++temp;
-			if (temp++ >= testNumber) return;*/
 		}
 	}
 }
@@ -144,19 +142,25 @@ bool Hex::IS_GAME_OVER(const short& state) {
 	return false;
 }
 
-void Hex::checkPositions(vector<bool>& afterDFS, bool isPerfect, const short& st, const char& player, const char& symbol, vector<Cell*>* perfectPlayerTurns = nullptr) {
+void Hex::checkPositions(short afterDFS[], bool isPerfect, const short& st, const char& player, const char& symbol, Cell** perfectPlayerTurns = nullptr) {
 	// player może być r, b lub ' '
 	// ta funkcja jest używana w naive i is_board_possible
 	if (player == ' ') {
 		for (short i = 0; i < emptyCounter2; ++i) {
-			if (emptyPlaces[i]->symbol != ' ') continue;
+			if (emptyPlaces[i]->symbol != ' ') {
+				*(afterDFS + i) = 3;
+				continue;
+			}
 			emptyPlaces[i]->symbol = symbol;
 			bool b = beforeDFS(st);
-			afterDFS.push_back(b);
+			*(afterDFS + i) = b;
 			emptyPlaces[i]->symbol = player;
 			if (isPerfect && b) {
-				perfectPlayerTurns->push_back(emptyPlaces[i]);
-				if (perfectPlayerTurns->size() >= 2) return;
+				if (perfectPlayerTurns != nullptr) {
+					*perfectPlayerTurns = emptyPlaces[i];
+					return;
+				}
+				return;
 			}
 		}
 		return;
@@ -166,7 +170,7 @@ void Hex::checkPositions(vector<bool>& afterDFS, bool isPerfect, const short& st
 		for (short j = 0; j < size; ++j) {
 			if (board[i][j]->symbol == player) {
 				board[i][j]->symbol = symbol;
-				afterDFS.push_back(beforeDFS(st));
+				*(afterDFS + i) = beforeDFS(st);
 				board[i][j]->symbol = player;
 			}
 		}
@@ -178,14 +182,20 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 		switch (whoWon) {
 		case 1: { // RED
 			if (BLUE_PAWNS == RED_PAWNS - 1) {
-				vector<bool> afterDFS;
+				short* afterDFS = new short[size * size] {2};
 				checkPositions(afterDFS, false, 2, 'r', ' ');
-				for (auto b : afterDFS) {
-					if (!b) {
+				for (short k = 0; k < size * size; ++k) {
+					if (afterDFS[k] == 0) {
 						whoWon = 1;
+						delete[] afterDFS;
 						return true;
 					}
+					if (afterDFS[k] == 2) {
+						delete[] afterDFS;
+						return false;
+					}
 				}
+				delete[] afterDFS;
 				return false;
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
@@ -198,14 +208,20 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 				return false;
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
-				vector<bool> afterDFS;
+				short* afterDFS = new short[size * size] {2};
 				checkPositions(afterDFS, false, 1, 'b', ' ');
-				for (auto b : afterDFS) {
-					if (!b) {
+				for (short k = 0; k < size * size; ++k) {
+					if (afterDFS[k] == 0) {
 						whoWon = 2;
+						delete[] afterDFS;
 						return true;
 					}
+					if (afterDFS[k] == 2) {
+						delete[] afterDFS;
+						return false;
+					}
 				}
+				delete[] afterDFS;
 				return false;
 			}
 			break;
@@ -304,21 +320,21 @@ bool Hex::CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, const char& 
 		else {
 			countPlayersTurns(1, isRed);
 			if (turns <= emptyCounter) {
-				vector<bool> afterDFS;
+				short* afterDFS = new short[emptyCounter2] {2};
 				short st = player == 'r' ? 2 : 1;
 				checkPositions(afterDFS, false, st, ' ', player);
-				for (auto b : afterDFS) {
-					if (b) {
+				for (short k = 0; k < emptyCounter2; ++k) {
+					if (afterDFS[k] == 1) {
+						delete[] afterDFS;
 						return true;
 					}
+					else if (afterDFS[k] == 2) {
+						delete[] afterDFS;
+						return false;
+					}
 				}
+				delete[] afterDFS;
 				return false;
-				// mini-max
-				// zrobic dla kazdego przypadku kontainer, ktory bedzie 
-				// zbieral wyniki dfsa (line_length piona) dla gracza, ktory chce wygrac
-				// jesli gracz nie wygrywa, to sprawdzic caly kontainer na maksymalna liczbe line_length
-				// i dodac do tego miejsca pion 
-				// jesli kilka maksymalnych line_length, to wybrac pierwszy
 			}
 			else {
 				return false;
@@ -346,7 +362,8 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 		else {
 			countPlayersTurns(2, isRed);
 			if (turns <= emptyCounter) {
-				vector<bool> afterDFS;
+				short* afterDFS = new short[emptyCounter * emptyCounter] {2};
+				short k = 0;
 				for (short i = 0; i < emptyCounter; ++i) {
 					for (short j = i + 1; j < emptyCounter; ++j) {
 						emptyPlaces[i]->symbol = player;
@@ -354,7 +371,6 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 						short st = player == 'r' ? 2 : 1;
 						if (beforeDFS(st)) {
 							emptyPlaces[i]->symbol = ' ';
-
 							bool first = beforeDFS(st);
 							emptyPlaces[i]->symbol = player;
 							bool second;
@@ -369,22 +385,23 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 							}
 
 							if (first && second) {
-								afterDFS.push_back(false);
+								afterDFS[k++] = 0;
 							}
 							else {
-								afterDFS.push_back(true);
+								afterDFS[k++] = 1;
 							}
 						}
 						emptyPlaces[i]->symbol = ' ';
 						emptyPlaces[j]->symbol = ' ';
 					}
-
 				}
-				for (auto b : afterDFS) {
-					if (b) {
+				for (short l = 0; l < k; ++l) {
+					if (afterDFS[l] == 1) {
+						delete[] afterDFS;
 						return true;
 					}
 				}
+				delete[] afterDFS;
 				return false;
 			}
 			else {
@@ -426,6 +443,9 @@ bool Hex::CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state, const char
 		countPlayersTurns(1, isRed);
 		if (turns <= emptyCounter_) {
 			if (turns == 1) {
+				if (PAWNS_NUMBER == 0 && size > 1) {
+					return false;
+				}
 				if (redTurns > blueTurns) {
 					return CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state);
 				}
@@ -434,27 +454,51 @@ bool Hex::CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state, const char
 				}
 			}
 			else {
-				if (IS_BOARD_POSSIBLE(state)) {
+				if (PAWNS_NUMBER == 0 || IS_BOARD_POSSIBLE(state)) {
 					if (whoWon == 1 || whoWon == 2) {
 						return false;
 					}
 					else {
-						vector<bool> afterDFS;
+						short* afterDFS = new short[emptyCounter2] {2};
 						short st = player == 'r' ? 2 : 1;
-						vector<Cell*> perfectPlayerTurns;
+						Cell* perfectPlayerTurns = nullptr;
 						checkPositions(afterDFS, true, st, ' ', player, &perfectPlayerTurns);
-						if (perfectPlayerTurns.size() > 1) {
-							perfectPlayerTurns.clear();
-							return true;
-						}
-						else if (perfectPlayerTurns.size() == 1) {
-							perfectPlayerTurns.clear();
+						if (perfectPlayerTurns != nullptr) {
+							Cell* cell = perfectPlayerTurns;
+							char s = player == 'r' ? 'b' : 'r';
+							cell->symbol = s;
+							perfectPlayerTurns = nullptr;
+							for (short k = 0; k < emptyCounter2; ++k) {
+								if (afterDFS[k] != 2) {
+									afterDFS[k] = 2;
+								}
+								else {
+									break;
+								}
+							}
+							checkPositions(afterDFS, true, st, ' ', player);
+							for (short k = 0; k < emptyCounter2; ++k) {
+								if (afterDFS[k] == 1) {
+									cell->symbol = ' '; 
+									delete[] afterDFS;
+									return true;
+								}
+								else if (afterDFS[k] == 2){
+									cell->symbol = ' ';
+									delete[] afterDFS;
+									return false;
+								}
+							}
+							delete[] afterDFS;
+							cell->symbol = ' ';
 							return false;
 						}
 						else {
-							// nie ma sensu robić perfectPlayerTurns.clear(); bo size = 0
+							delete[] afterDFS; 
 							return false;
 						}
+						delete[] afterDFS;
+						return false;
 					}
 				}
 				else {
@@ -481,21 +525,25 @@ bool Hex::CAN_BLUE_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state) {
 	return CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'b', false, emptyCounter);
 }
 
-void Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(vector<bool>& afterDFS, const short& state, const char& player) {
+void Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(short afterDFS[], const short& state, const char& player) {
 	short tempRed = redTurns, tempBlue = blueTurns;
 	--emptyCounter;
 	updateStats(player, 1);
 	for (short i = 0; i < emptyCounter2; ++i) {
-		if (emptyPlaces[i]->symbol != ' ') continue;
-		emptyPlaces[i]->symbol = player;
-		if (tempRed > blueTurns) {
-			afterDFS.push_back(CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, player, true, emptyCounter));
+		if (emptyPlaces[i]->symbol != ' ') {
+			*(afterDFS + i) = 3;
+			continue;
 		}
-		else if (tempRed < blueTurns) {
-			afterDFS.push_back(CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, player, false, emptyCounter));
+
+		emptyPlaces[i]->symbol = player;
+		if (tempRed > tempBlue) {
+			*(afterDFS + i) = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(2, player, true, emptyCounter);
+		}
+		else if (tempRed < tempBlue) {
+			*(afterDFS + i) = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(1, player, false, emptyCounter);
 		}
 		else {
-			afterDFS.push_back(CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, player, player == 'r', emptyCounter));
+			*(afterDFS + i) = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(player == 'r' ? 2 : 1, player, player == 'r', emptyCounter);
 		}
 		emptyPlaces[i]->symbol = ' ';
 	}	
@@ -512,21 +560,29 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const c
 			countPlayersTurns(2, isRed);
 			if (turns <= emptyCounter) {
 				if (turns == 3) {
-					vector<bool> afterDFS;
+					short* afterDFS = new short[emptyCounter2 * emptyCounter2] {2};
 					CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(afterDFS, state, player);
-					for (auto b : afterDFS) {
-						if (b) {
+					for (short k = 0; k < emptyCounter2 * emptyCounter2; ++k) {
+						if (afterDFS[k] == 1) {
+							delete[] afterDFS;
 							return true;
 						}
+						else if (afterDFS[k] == 2) {
+							delete[] afterDFS;
+							return false;
+						}
 					}
+					delete[] afterDFS;
 					return false;
 				}
 				else if (turns == 4) {
 					--emptyCounter;
 					if (isRed) {
-						vector<bool> afterDFS;
-						vector<bool> afterPerfect;
+						short* afterPerfect = new short[emptyCounter2 * emptyCounter2] {2};
+						short count = 0;
+
 						for (int i = 0; i < emptyCounter2; ++i) {
+							short* afterDFS = new short[emptyCounter2 * emptyCounter2] {2};
 							if (emptyPlaces[i]->symbol != ' ') continue;
 							emptyPlaces[i]->symbol = 'b';
 							updateStats('b', 1);
@@ -535,28 +591,40 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const c
 							updateStats('b', -1);
 							emptyPlaces[i]->symbol = ' ';
 							bool wasTrue = false;
-							for (auto b : afterDFS) {
-								if (wasTrue) break;
-								if (b) {
+							for (short k = 0; k < emptyCounter2 * emptyCounter2; ++k) {
+								if (afterDFS[k] == 1) {
 									wasTrue = true;
+									delete[] afterDFS;
+									break;
+								}
+								else if (afterDFS[k] == 2) {
+									wasTrue = false;
+									break;
 								}
 							}
-							afterPerfect.push_back(wasTrue);
-							afterDFS.clear();
+							if (!wasTrue) {
+								delete[] afterDFS;
+							}
+
+							afterPerfect[count++] = wasTrue;
 						}
-						for (auto b : afterPerfect) {
-							if (!b) {
-								++emptyCounter; 
+						for (short l = 0; l < count; ++l) {
+							if (afterPerfect[l] == 0) {
+								++emptyCounter;
+								delete[] afterPerfect;
 								return false;
 							}
 						}
-						++emptyCounter; 
+						++emptyCounter;
+						delete[] afterPerfect;
 						return true;
 					}
 					else {
-						vector<bool> afterDFS;
-						vector<bool> afterPerfect; 
+						short* afterPerfect = new short[emptyCounter2 * emptyCounter2] {2};
+						short count = 0;
+
 						for (int i = 0; i < emptyCounter2; ++i) {
+							short* afterDFS = new short[emptyCounter2] {2};
 							emptyPlaces[i]->symbol = 'r';
 							updateStats('r', 1);
 							countPlayersTurns(2, isRed);
@@ -564,22 +632,32 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const c
 							updateStats('r', -1);
 							emptyPlaces[i]->symbol = ' ';
 							bool wasTrue = false;
-							for (auto b : afterDFS) {
-								if (wasTrue) break;
-								if (b) {
+
+							for (short k = 0; k < emptyCounter2; ++k) {
+								if (afterDFS[k] == 1) {
 									wasTrue = true;
+									delete[] afterDFS;
+									break;
+								}
+								else if (afterDFS[k] == 2) {
+									wasTrue = false;
+									break;
 								}
 							}
-							afterPerfect.push_back(wasTrue);
-							afterDFS.clear();
+							if (!wasTrue) {
+								delete[] afterDFS;
+							}
+							afterPerfect[count++] = wasTrue;
 						}
-						for (auto b : afterPerfect) {
-							if (!b) {
+						for (short l = 0; l < count; ++l) {
+							if (afterPerfect[l] == 0) {
 								++emptyCounter;
+								delete[] afterPerfect;
 								return false;
 							}
 						}
 						++emptyCounter;
+						delete[] afterPerfect;
 						return true;
 					}
 				}
