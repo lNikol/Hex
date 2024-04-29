@@ -232,5 +232,5 @@ int main()
 			hex.oldTags = counter;
 		}
 	}
- 	file.close();
+  	file.close();
 }

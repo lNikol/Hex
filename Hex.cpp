@@ -145,6 +145,7 @@ bool Hex::IS_GAME_OVER(const short& state) {
 void Hex::checkPositions(short afterDFS[], bool isPerfect, const short& st, const char& player, const char& symbol, Cell** perfectPlayerTurns = nullptr) {
 	// player może być r, b lub ' '
 	// ta funkcja jest używana w naive i is_board_possible
+	short k = 0;
 	if (player == ' ') {
 		for (short i = 0; i < emptyCounter2; ++i) {
 			if (emptyPlaces[i]->symbol != ' ') {
@@ -157,8 +158,10 @@ void Hex::checkPositions(short afterDFS[], bool isPerfect, const short& st, cons
 			emptyPlaces[i]->symbol = player;
 			if (isPerfect && b) {
 				if (perfectPlayerTurns != nullptr) {
-					*perfectPlayerTurns = emptyPlaces[i];
-					return;
+					*(perfectPlayerTurns + k++) = emptyPlaces[i];
+					if (k == 2) {
+						return;
+					}
 				}
 				return;
 			}
@@ -166,11 +169,12 @@ void Hex::checkPositions(short afterDFS[], bool isPerfect, const short& st, cons
 		return;
 	}
 
+	short count = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
 			if (board[i][j]->symbol == player) {
 				board[i][j]->symbol = symbol;
-				*(afterDFS + i) = beforeDFS(st);
+				*(afterDFS + count++) = beforeDFS(st);
 				board[i][j]->symbol = player;
 			}
 		}
@@ -182,17 +186,13 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 		switch (whoWon) {
 		case 1: { // RED
 			if (BLUE_PAWNS == RED_PAWNS - 1) {
-				short* afterDFS = new short[size * size] {2};
+				short* afterDFS = new short[RED_PAWNS] {2};
 				checkPositions(afterDFS, false, 2, 'r', ' ');
-				for (short k = 0; k < size * size; ++k) {
-					if (afterDFS[k] == 0) {
+				for (short k = 0; k < RED_PAWNS; ++k) {
+					if (*(afterDFS+k) == 0) {
 						whoWon = 1;
 						delete[] afterDFS;
 						return true;
-					}
-					if (afterDFS[k] == 2) {
-						delete[] afterDFS;
-						return false;
 					}
 				}
 				delete[] afterDFS;
@@ -208,17 +208,13 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 				return false;
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
-				short* afterDFS = new short[size * size] {2};
+				short* afterDFS = new short[BLUE_PAWNS] {2};
 				checkPositions(afterDFS, false, 1, 'b', ' ');
-				for (short k = 0; k < size * size; ++k) {
+				for (short k = 0; k < BLUE_PAWNS; ++k) {
 					if (afterDFS[k] == 0) {
 						whoWon = 2;
 						delete[] afterDFS;
 						return true;
-					}
-					if (afterDFS[k] == 2) {
-						delete[] afterDFS;
-						return false;
 					}
 				}
 				delete[] afterDFS;
@@ -461,42 +457,24 @@ bool Hex::CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state, const char
 					else {
 						short* afterDFS = new short[emptyCounter2] {2};
 						short st = player == 'r' ? 2 : 1;
-						Cell* perfectPlayerTurns = nullptr;
-						checkPositions(afterDFS, true, st, ' ', player, &perfectPlayerTurns);
-						if (perfectPlayerTurns != nullptr) {
-							Cell* cell = perfectPlayerTurns;
-							char s = player == 'r' ? 'b' : 'r';
-							cell->symbol = s;
-							perfectPlayerTurns = nullptr;
-							for (short k = 0; k < emptyCounter2; ++k) {
-								if (afterDFS[k] != 2) {
-									afterDFS[k] = 2;
-								}
-								else {
-									break;
-								}
-							}
-							checkPositions(afterDFS, true, st, ' ', player);
-							for (short k = 0; k < emptyCounter2; ++k) {
-								if (afterDFS[k] == 1) {
-									cell->symbol = ' '; 
-									delete[] afterDFS;
-									return true;
-								}
-								else if (afterDFS[k] == 2){
-									cell->symbol = ' ';
-									delete[] afterDFS;
-									return false;
-								}
-							}
+						Cell* perfectPlayerTurns[2];
+						checkPositions(afterDFS, true, st, ' ', player, perfectPlayerTurns);
+						if (perfectPlayerTurns[0] != nullptr && perfectPlayerTurns[1] != nullptr) {
+							perfectPlayerTurns[0] = nullptr;
+							perfectPlayerTurns[1] = nullptr;
 							delete[] afterDFS;
-							cell->symbol = ' ';
+							return true;
+						}
+						else if (perfectPlayerTurns[0] != nullptr && perfectPlayerTurns[1] == nullptr) {
+							delete[] afterDFS;
 							return false;
 						}
 						else {
-							delete[] afterDFS; 
+							// nie ma sensu robić perfectPlayerTurns.clear(); bo size = 0
+							delete[] afterDFS;
 							return false;
 						}
+
 						delete[] afterDFS;
 						return false;
 					}
