@@ -6,6 +6,8 @@ using namespace std;
 Hex::Hex() {
 
 }
+
+
 Hex::~Hex() {
 	for (short i = 0; i < ARR_SIZE; ++i) {
 		for (short j = 0; j < ARR_SIZE; ++j) {
@@ -61,16 +63,12 @@ void Hex::getNeighbors(Cell** neighbors, const Cell* cell, short& count) {
 }
 
 bool Hex::beforeDFS(const short& state) {
-	// dla czerwonego gracza z gornego do dolnego
-	// pseudo win:
-	// 0 - nic
-	// 1 - red win (w rzecywistosci wygral niebieski gracz)
-	// 2 - blue win (w rzecywistosci wygral czerwony gracz)
+	// state odpowiada za blokowanie sprawdzenie dfs dla graczy
+	// 1 blokuje sprawdzenie czerwonego
+	// 2 blokuje sprawdzenie niebieskiego
+	// 0 sprawdza piony dwoch graczy
 
 	if (state != 1) {
-		/*if (state == 0) {
-			testNumber = RED_PAWNS;
-		}*/
 		for (short i = 0; i < size; ++i) {
 			if (board[0][i]->symbol == 'r') {
 				if (DFS(board[0][i], true)) {
@@ -84,9 +82,6 @@ bool Hex::beforeDFS(const short& state) {
 	}
 
 	if (state != 2) {
-		/*if (state == 0) {
-			testNumber = BLUE_PAWNS;
-		}*/
 		for (short i = 0; i < size; ++i) {
 			if (board[i][0]->symbol == 'b') {
 				if (DFS(board[i][0], false)) {
@@ -149,14 +144,20 @@ bool Hex::IS_GAME_OVER(const short& state) {
 	return false;
 }
 
-void Hex::checkPositions(vector<bool>& afterDFS, const short& st, const char& player, const char& symbol) {
+void Hex::checkPositions(vector<bool>& afterDFS, bool isPerfect, const short& st, const char& player, const char& symbol, vector<Cell*>* perfectPlayerTurns = nullptr) {
 	// player może być r, b lub ' '
 	// ta funkcja jest używana w naive i is_board_possible
 	if (player == ' ') {
-		for (short i = 0; i < emptyCounter; ++i) {
+		for (short i = 0; i < emptyCounter2; ++i) {
+			if (emptyPlaces[i]->symbol != ' ') continue;
 			emptyPlaces[i]->symbol = symbol;
-			afterDFS.push_back(beforeDFS(st));
+			bool b = beforeDFS(st);
+			afterDFS.push_back(b);
 			emptyPlaces[i]->symbol = player;
+			if (isPerfect && b) {
+				perfectPlayerTurns->push_back(emptyPlaces[i]);
+				if (perfectPlayerTurns->size() >= 2) return;
+			}
 		}
 		return;
 	}
@@ -178,7 +179,7 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 		case 1: { // RED
 			if (BLUE_PAWNS == RED_PAWNS - 1) {
 				vector<bool> afterDFS;
-				checkPositions(afterDFS, 2, 'r', ' ');
+				checkPositions(afterDFS, false, 2, 'r', ' ');
 				for (auto b : afterDFS) {
 					if (!b) {
 						whoWon = 1;
@@ -198,7 +199,7 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 			}
 			else if (BLUE_PAWNS == RED_PAWNS) {
 				vector<bool> afterDFS;
-				checkPositions(afterDFS, 1, 'b', ' ');
+				checkPositions(afterDFS, false, 1, 'b', ' ');
 				for (auto b : afterDFS) {
 					if (!b) {
 						whoWon = 2;
@@ -220,7 +221,11 @@ bool Hex::IS_BOARD_POSSIBLE(const short& state) {
 	}
 }
 
-void Hex::countNaiveTurns(const short& N, bool isRed) {
+void Hex::countPlayersTurns(const short& N, bool isRed) {
+	turns = 0;
+	redTurns = 0;
+	blueTurns = 0;
+
 	if (N == 1) {
 		if (isRed) {
 			if (RED_PAWNS == BLUE_PAWNS) {
@@ -248,6 +253,7 @@ void Hex::countNaiveTurns(const short& N, bool isRed) {
 	else if (N == 2) {
 		if (isRed) {
 			if (RED_PAWNS == BLUE_PAWNS) {
+				// tura czerwonego
 				redTurns = 2;
 				blueTurns = 1;
 				turns = 3;
@@ -261,11 +267,13 @@ void Hex::countNaiveTurns(const short& N, bool isRed) {
 		}
 		else {
 			if (RED_PAWNS == BLUE_PAWNS) {
+				// tura czerwonego
 				redTurns = 2;
 				blueTurns = 2;
 				turns = 4;
 			}
 			else if (BLUE_PAWNS == RED_PAWNS - 1) {
+				// tura niebieskiego
 				redTurns = 1;
 				blueTurns = 2;
 				turns = 3;
@@ -274,17 +282,31 @@ void Hex::countNaiveTurns(const short& N, bool isRed) {
 	}
 }
 
+void Hex::updateStats(const char& s, const short& n) {
+	switch (s) {
+	case 'r': {
+		RED_PAWNS += n;
+		break;
+	}
+	case 'b': {
+		BLUE_PAWNS += n;
+		break;
+	}
+	}
+	PAWNS_NUMBER += n;
+}
+
 bool Hex::CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, const char& player, bool isRed) {
 	if (IS_BOARD_POSSIBLE(state)) {
 		if (whoWon == 1 || whoWon == 2) {
 			return false;
 		}
 		else {
-			countNaiveTurns(1, isRed);
+			countPlayersTurns(1, isRed);
 			if (turns <= emptyCounter) {
 				vector<bool> afterDFS;
 				short st = player == 'r' ? 2 : 1;
-				checkPositions(afterDFS, st, ' ', player);
+				checkPositions(afterDFS, false, st, ' ', player);
 				for (auto b : afterDFS) {
 					if (b) {
 						return true;
@@ -322,7 +344,7 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const char&
 			return false;
 		}
 		else {
-			countNaiveTurns(2, isRed);
+			countPlayersTurns(2, isRed);
 			if (turns <= emptyCounter) {
 				vector<bool> afterDFS;
 				for (short i = 0; i < emptyCounter; ++i) {
@@ -381,4 +403,202 @@ bool Hex::CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state) {
 
 bool Hex::CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state) {
 	return CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, 'b', false);
+}
+
+bool Hex::CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state, const char& player, bool isRed, const short& emptyCounter_) {
+
+	/* Logika:
+	* w zależności od ilości tur:
+	* jeśli turns == 1, to sprawdzić czyja jest teraz tura
+	* jeśli czerwonego, to naive dla czerwonego
+	* jeśli niebieski, to naive dla niebieskiego
+	*
+	* zrobić coś podobnego dla dwóch tur, gdzie w zależności od
+	* gracza wywołuję odpowiednie funkcje
+	*
+	*
+	* w zależności od tego, kto teraz ma więcej tur, tego i tura
+	* blueTurns>redTurns -> blue ma turę, jęsli blueTruns==redTurns to w zależności od isRed
+
+	*/
+
+	if (get_IS_BOARD_CORRECT()) {
+		countPlayersTurns(1, isRed);
+		if (turns <= emptyCounter_) {
+			if (turns == 1) {
+				if (redTurns > blueTurns) {
+					return CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state);
+				}
+				else if (redTurns < blueTurns) {
+					return CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state);
+				}
+			}
+			else {
+				if (IS_BOARD_POSSIBLE(state)) {
+					if (whoWon == 1 || whoWon == 2) {
+						return false;
+					}
+					else {
+						vector<bool> afterDFS;
+						short st = player == 'r' ? 2 : 1;
+						vector<Cell*> perfectPlayerTurns;
+						checkPositions(afterDFS, true, st, ' ', player, &perfectPlayerTurns);
+						if (perfectPlayerTurns.size() > 1) {
+							perfectPlayerTurns.clear();
+							return true;
+						}
+						else if (perfectPlayerTurns.size() == 1) {
+							perfectPlayerTurns.clear();
+							return false;
+						}
+						else {
+							// nie ma sensu robić perfectPlayerTurns.clear(); bo size = 0
+							return false;
+						}
+					}
+				}
+				else {
+					return false;
+				}
+			}
+		}
+		else {
+			return false;
+		}
+		return false;
+	}
+	else {
+		return false;
+	}
+}
+
+
+bool Hex::CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state) {
+	return CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'r', true, emptyCounter);
+}
+
+bool Hex::CAN_BLUE_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state) {
+	return CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'b', false, emptyCounter);
+}
+
+void Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(vector<bool>& afterDFS, const short& state, const char& player) {
+	short tempRed = redTurns, tempBlue = blueTurns;
+	--emptyCounter;
+	updateStats(player, 1);
+	for (short i = 0; i < emptyCounter2; ++i) {
+		if (emptyPlaces[i]->symbol != ' ') continue;
+		emptyPlaces[i]->symbol = player;
+		if (tempRed > blueTurns) {
+			afterDFS.push_back(CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, player, true, emptyCounter));
+		}
+		else if (tempRed < blueTurns) {
+			afterDFS.push_back(CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, player, false, emptyCounter));
+		}
+		else {
+			afterDFS.push_back(CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, player, player == 'r', emptyCounter));
+		}
+		emptyPlaces[i]->symbol = ' ';
+	}	
+	updateStats(player, -1);
+	++emptyCounter;
+}
+
+bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const char& player, bool isRed) {
+	if (IS_BOARD_POSSIBLE(state)) {
+		if (whoWon == 1 || whoWon == 2) {
+			return false;
+		}
+		else {
+			countPlayersTurns(2, isRed);
+			if (turns <= emptyCounter) {
+				if (turns == 3) {
+					vector<bool> afterDFS;
+					CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(afterDFS, state, player);
+					for (auto b : afterDFS) {
+						if (b) {
+							return true;
+						}
+					}
+					return false;
+				}
+				else if (turns == 4) {
+					--emptyCounter;
+					if (isRed) {
+						vector<bool> afterDFS;
+						vector<bool> afterPerfect;
+						for (int i = 0; i < emptyCounter2; ++i) {
+							if (emptyPlaces[i]->symbol != ' ') continue;
+							emptyPlaces[i]->symbol = 'b';
+							updateStats('b', 1);
+							countPlayersTurns(2, isRed);
+							CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(afterDFS, state, 'r');
+							updateStats('b', -1);
+							emptyPlaces[i]->symbol = ' ';
+							bool wasTrue = false;
+							for (auto b : afterDFS) {
+								if (wasTrue) break;
+								if (b) {
+									wasTrue = true;
+								}
+							}
+							afterPerfect.push_back(wasTrue);
+							afterDFS.clear();
+						}
+						for (auto b : afterPerfect) {
+							if (!b) {
+								++emptyCounter; 
+								return false;
+							}
+						}
+						++emptyCounter; 
+						return true;
+					}
+					else {
+						vector<bool> afterDFS;
+						vector<bool> afterPerfect; 
+						for (int i = 0; i < emptyCounter2; ++i) {
+							emptyPlaces[i]->symbol = 'r';
+							updateStats('r', 1);
+							countPlayersTurns(2, isRed);
+							CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(afterDFS, state, 'b');
+							updateStats('r', -1);
+							emptyPlaces[i]->symbol = ' ';
+							bool wasTrue = false;
+							for (auto b : afterDFS) {
+								if (wasTrue) break;
+								if (b) {
+									wasTrue = true;
+								}
+							}
+							afterPerfect.push_back(wasTrue);
+							afterDFS.clear();
+						}
+						for (auto b : afterPerfect) {
+							if (!b) {
+								++emptyCounter;
+								return false;
+							}
+						}
+						++emptyCounter;
+						return true;
+					}
+				}
+			}
+			else {
+				return false;
+			}
+		}
+		return false;
+	}
+	else {
+		return false;
+	}
+}
+
+bool Hex::CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(const short& state) {
+	return CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(state, 'r', true);
+}
+
+bool Hex::CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(const short& state) {
+	return CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(state, 'b', false);
 }

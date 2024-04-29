@@ -78,6 +78,7 @@ int main()
 			hex.~Hex(); 
 			hex = Hex();
 		}
+		
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
 			if (hex.CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state)) {
 				file << "YES\n";
@@ -123,20 +124,52 @@ int main()
 			hex.~Hex(); 
 			hex = Hex();
 		}
+		
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
-
+			if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'r', true, hex.emptyCounter)) {
+				file << "YES\n";
+				//printf("YES\n");
 			}
-			hex.~Hex(); 
-			hex = Hex();
+			else {
+				file << "NO\n";
+				//printf("NO\n");
+			}
+			hex.whoWon = -1;
+		}
+		else if (line == "CAN_BLUE_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
+			if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'b', false, hex.emptyCounter)) {
+				file << "YES\n";
+				//printf("YES\n");
+			}
+			else {
+				file << "NO\n";
+				//printf("NO\n");
+			}
+			hex.whoWon = -1;
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
-			if (hex.get_IS_BOARD_CORRECT()) {
-
+			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state)) {
+				file << "YES\n";
+				//printf("YES\n");
+			}
+			else {
+				file << "NO\n";
+				//printf("NO\n");
+			}
+			hex.whoWon = -1;
+		}
+		else if (line == "CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
+			if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state)) {
+				file << "YES\n\n";
+				//printf("YES\n\n");
+			}
+			else {
+				file << "NO\n\n";
+				//printf("NO\n\n");
 			}
 			hex.~Hex();
 			hex = Hex();
-		}
+		}		
 		else {
 			short tagCounter = 0; for (char c : line) { if (c == '<') ++tagCounter; }
 			short counter; // liczy linii i dzieki niemu 
@@ -194,6 +227,7 @@ int main()
 			if (line != "") {
 				++hex.lineCounter;
 				hex.size = hex.lineCounter / 2;
+				hex.emptyCounter2 = hex.emptyCounter;
 			}
 			hex.oldTags = counter;
 		}
