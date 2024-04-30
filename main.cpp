@@ -12,8 +12,8 @@ int main()
 	short state = 0;
 	while (getline(cin, line)) {
 		if (line == "BOARD_SIZE") {
-			file << hex.lineCounter / 2 << endl << endl;
-			//printf("%d\n\n", hex.lineCounter / 2);
+			file << (hex.lineCounter + 1) / 2 << endl << endl;
+			//printf("%d\n\n", (hex.lineCounter + 1) / 2);
 			hex.~Hex(); 
 			hex = Hex();
 		}
@@ -149,6 +149,7 @@ int main()
 			hex.whoWon = -1;
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
+
 			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state)) {
 				file << "YES\n";
 				//printf("YES\n");

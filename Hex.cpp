@@ -35,7 +35,6 @@ bool Hex::get_IS_BOARD_CORRECT() {
 }
 
 void Hex::resetVisited() {
-	//short temp = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
 			board[i][j]->visited = false;
@@ -501,7 +500,7 @@ bool Hex::CAN_BLUE_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state) {
 }
 
 void Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(short afterDFS[], const short& state, const char& player) {
-	short tempRed = redTurns, tempBlue = blueTurns;
+	short tempRed = player == 'r' ? redTurns - 1 : redTurns, tempBlue = player == 'b' ? blueTurns - 1 : blueTurns;
 	--emptyCounter;
 	updateStats(player, 1);
 	for (short i = 0; i < emptyCounter2; ++i) {
@@ -512,13 +511,34 @@ void Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(short afterDFS[], const short
 
 		emptyPlaces[i]->symbol = player;
 		if (tempRed > tempBlue) {
-			*(afterDFS + i) = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(2, player, true, emptyCounter);
+			bool b = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(2, player, true, emptyCounter);
+			*(afterDFS + i) = b;
+			if (b) {
+				updateStats(player, -1);
+				emptyPlaces[i]->symbol = ' ';
+				++emptyCounter;
+				return;
+			}
 		}
 		else if (tempRed < tempBlue) {
-			*(afterDFS + i) = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(1, player, false, emptyCounter);
+			bool b = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(1, player, false, emptyCounter);
+			*(afterDFS + i) = b;
+			if (b) {
+				updateStats(player, -1); 
+				emptyPlaces[i]->symbol = ' ';
+				++emptyCounter;
+				return;
+			}
 		}
 		else {
-			*(afterDFS + i) = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(player == 'r' ? 2 : 1, player, player == 'r', emptyCounter);
+			bool b = CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(player == 'r' ? 2 : 1, player, player == 'r', emptyCounter);
+			*(afterDFS + i) = b;
+			if (b) {
+				updateStats(player, -1); 
+				emptyPlaces[i]->symbol = ' ';
+				++emptyCounter;
+				return;
+			}
 		}
 		emptyPlaces[i]->symbol = ' ';
 	}
@@ -583,6 +603,8 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const c
 							}
 							if (!wasTrue) {
 								delete[] afterDFS;
+								delete[] afterPerfect;
+								return false;
 							}
 
 							afterPerfect[count++] = wasTrue;
@@ -625,6 +647,8 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const c
 							}
 							if (!wasTrue) {
 								delete[] afterDFS;
+								delete[] afterPerfect;
+								return false;
 							}
 							afterPerfect[count++] = wasTrue;
 						}
