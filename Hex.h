@@ -14,7 +14,7 @@ struct Hex {
 	short lineCounter = 0;
 	short size = 0;
 	short turns = 0, redTurns = 0, blueTurns = 0;
-	short BOARD_SIZE = 0;
+	
 	short PAWNS_NUMBER = 0;
 	short RED_PAWNS = 0;
 	short BLUE_PAWNS = 0;
@@ -24,7 +24,6 @@ struct Hex {
 	short emptyCounter = 0, emptyCounter2 = 0;
 
 	Hex();
-	void setPlayerSymbol(char s, const short& line, const short& cell);
 	bool get_IS_BOARD_CORRECT();
 	void resetVisited();
 	void getNeighbors(Cell** neighbors, const Cell* cell, short& count);

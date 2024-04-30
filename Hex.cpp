@@ -20,10 +20,6 @@ Hex::~Hex() {
 	}
 }
 
-void Hex::setPlayerSymbol(char s, const short& line, const short& cell) {
-
-}
-
 bool Hex::get_IS_BOARD_CORRECT() {
 	if (BLUE_PAWNS == RED_PAWNS - 1 || BLUE_PAWNS == RED_PAWNS) {
 		IS_BOARD_CORRECT = true;
@@ -290,6 +286,7 @@ void Hex::countPlayersTurns(const short& N, bool isRed) {
 		}
 	}
 }
+
 void Hex::updateStats(const char& s, const short& n) {
 	switch (s) {
 	case 'r': {
@@ -575,6 +572,11 @@ bool Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const c
 					return false;
 				}
 				else if (turns == 4) {
+					/*
+					* Zmienic logike i nazwy zmiennych
+					* Sprawdzic czy poprawnie sprawdzam stan perfect4
+					*/
+
 					--emptyCounter;
 					if (isRed) {
 						short* afterPerfect = new short[emptyCounter2 * emptyCounter2] {2};
