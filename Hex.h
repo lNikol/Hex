@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <string>
 #include "Cell.h"
 using namespace std;
 const short ARR_SIZE = 11;
@@ -9,6 +8,7 @@ struct Hex {
 	Cell* board[ARR_SIZE][ARR_SIZE] = { nullptr };
 	
 	bool isMaxOldSet = false;
+	bool isSecondPart = false;
 	short oldTags = 0, maxOldTags = 0;
 	short whoWon = -1; //0 - tie, 1 - red, 2 - blue
 	short lineCounter = 0;
@@ -26,7 +26,7 @@ struct Hex {
 	Hex();
 	void setPlayerSymbol(char s, const short& line, const short& cell);
 	bool get_IS_BOARD_CORRECT();
-	void resetVisited(const char& player);
+	void resetVisited();
 	void getNeighbors(Cell** neighbors, const Cell* cell, short& count);
 	bool beforeDFS(const short& state);
 	bool DFS(Cell* cell, bool isRed);

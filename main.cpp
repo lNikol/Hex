@@ -126,6 +126,7 @@ int main()
 		}
 		
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
+
 			if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'r', true, hex.emptyCounter)) {
 				file << "YES\n";
 				//printf("YES\n");
@@ -171,10 +172,19 @@ int main()
 			hex = Hex();
 		}		
 		else {
-			short tagCounter = 0; for (char c : line) { if (c == '<') ++tagCounter; }
+			if (line == "" || line.find("---") != string::npos) {
+				continue;
+			}
+			short tagCounter = 0; 
+			if (line[0] == '<' || line[1] == '<') {
+				hex.isSecondPart = true;
+			}
+			if (hex.isSecondPart) {
+				for (char c : line) { if (c == '<') ++tagCounter; }
+			}
 			short counter; // liczy linii i dzieki niemu 
 			// odpowiednio dodaje Cell do hex 11x11, ktory jest tablica
-			if (hex.oldTags > tagCounter) {
+			if (hex.oldTags > tagCounter && hex.isSecondPart) {
 				if (!hex.isMaxOldSet) {
 					hex.maxOldTags = hex.oldTags;
 					hex.isMaxOldSet = true;
@@ -187,6 +197,9 @@ int main()
 			for (short i = 0; i < line.size(); ++i) {
 				switch (line[i])
 				{
+				case ' ': {
+					continue;
+				}
 				case '<': {
 					char cell[5];
 					for (short j = 0; j < 5; ++j) {
@@ -224,11 +237,9 @@ int main()
 				}
 				}
 			}
-			if (line != "") {
-				++hex.lineCounter;
-				hex.size = hex.lineCounter / 2;
-				hex.emptyCounter2 = hex.emptyCounter;
-			}
+			++hex.lineCounter;
+			hex.size = (hex.lineCounter + 1) / 2;
+			hex.emptyCounter2 = hex.emptyCounter;
 			hex.oldTags = counter;
 		}
 	}
