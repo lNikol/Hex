@@ -98,7 +98,7 @@ Player Board::getWinner(const short& state) {
 	// 0 sprawdza piony dwoch graczy
 	if (state != 1) {
 		for (short i = 0; i < size; ++i) {
-			if (board[0][i]->symbol == 'r') {
+			if (board[0][i]->symbol == RED) {
 				if (DFS(board[0][i], true) == RED) {
 					resetVisited();
 					return RED;
@@ -109,7 +109,7 @@ Player Board::getWinner(const short& state) {
 	}
 	if (state != 2) {
 		for (short i = 0; i < size; ++i) {
-			if (board[i][0]->symbol == 'b') {
+			if (board[i][0]->symbol == BLUE) {
 				if (DFS(board[i][0], false) == BLUE) {
 					resetVisited();
 					return BLUE;
@@ -128,35 +128,32 @@ Player Board::IS_GAME_OVER(const short& state) {
 	return INCORRECT;
 }
 
-void Board::checkPositions(Player toFind, Player afterDFS[], bool isPerfect, const short& st, const char& player, const char& symbol, Pawn** possiblePerfectMoves = nullptr) {
+void Board::checkPositions(Player toFind, Player afterDFS[], bool isPerfect, const short& st, const Player& player, const Player& symbol, Pawn** possiblePerfectMoves = nullptr) {
 	// player może być r, b lub ' '
 	// ta funkcja jest używana w naive i is_board_possible
 	short k = 0;
-	if (player == ' ') {
+	if (player == EMPTY) {
 		for (short i = 0; i < emptyCounter; ++i) {
-			if (emptyPlaces[i]->symbol != ' ') {
-				*(afterDFS + i) = EMPTY;
+			if (emptyPlaces[i]->symbol != EMPTY) {
+				*(afterDFS + i) = INCORRECT;
 				continue;
 			}
 			emptyPlaces[i]->symbol = symbol;
 			Player p = getWinner(st);
 			*(afterDFS + i) = p;
 			emptyPlaces[i]->symbol = player;
-			/*if (isPerfect && b) {
-				if (possiblePerfectMoves != nullptr) {
-					*(possiblePerfectMoves + k++) = emptyPlaces[i];
-					if (k == 2) {
-						return;
-					}
+			if (isPerfect && p == toFind) {
+				*(possiblePerfectMoves + k++) = emptyPlaces[i];
+				if (k == 2) {
+					return;
 				}
-			}*/
-			if (p == toFind) {
+			}
+			else if (p == toFind) {
 				return;
 			}
 		}
 		return;
 	}
-
 	short count = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
@@ -174,7 +171,7 @@ bool Board::IS_BOARD_POSSIBLE(const short& state) {
 	case RED: {
 		if (BLUE_PAWNS == RED_PAWNS - 1) {
 			Player* afterDFS = new Player[RED_PAWNS]{ EMPTY };
-			checkPositions(BLUE, afterDFS, false, 2, 'r', ' ');
+			checkPositions(BLUE, afterDFS, false, 2, RED, EMPTY);
 			for (short k = 0; k < RED_PAWNS; ++k) {
 				if (*(afterDFS + k) != RED) {
 					delete[] afterDFS;
@@ -195,7 +192,7 @@ bool Board::IS_BOARD_POSSIBLE(const short& state) {
 		}
 		else if (BLUE_PAWNS == RED_PAWNS) {
 			Player* afterDFS = new Player[BLUE_PAWNS]{ EMPTY };
-			checkPositions(RED, afterDFS, false, 1, 'b', ' ');
+			checkPositions(RED, afterDFS, false, 1, BLUE, EMPTY);
 			for (short k = 0; k < BLUE_PAWNS; ++k) {
 				if (afterDFS[k] != BLUE) {
 					delete[] afterDFS;
@@ -215,6 +212,20 @@ bool Board::IS_BOARD_POSSIBLE(const short& state) {
 	}
 	}
 	return false;
+}
+
+void Board::updateStats(const Player& pl, const short& n) {
+	switch (pl) {
+	case RED: {
+		RED_PAWNS += n;
+		break;
+	}
+	case BLUE: {
+		BLUE_PAWNS += n;
+		break;
+	}
+	}
+	PAWNS_NUMBER += n;
 }
 
 void Board::countPlayersTurns(const short& N, bool isRed) {
@@ -290,5 +301,4 @@ Board::~Board() {
 			delete emptyPlaces[i];
 		}
 	}
-	
 }

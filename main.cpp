@@ -8,6 +8,7 @@ int main()
 {
 	ofstream file("temp.txt");
 	Hex2 hex;
+	short emptyCounter = hex.board.emptyCounter;
 	string line;
 	short state = 0;
 	while (getline(cin, line)) {
@@ -70,7 +71,8 @@ int main()
 			hex = Hex2();
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, hex.board.emptyCounter)) {
+			emptyCounter = hex.board.emptyCounter;
+			if (hex.CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, emptyCounter) == RED) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -80,7 +82,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, hex.board.emptyCounter)) {
+			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, emptyCounter) == RED) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -90,7 +92,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, hex.board.emptyCounter)) {
+			if (hex.CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, emptyCounter) == BLUE) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -100,7 +102,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, hex.board.emptyCounter)) {
+			if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, emptyCounter) == BLUE) {
 				file << "YES\n\n";
 				//printf("YES\n\n");
 			}
@@ -112,49 +114,47 @@ int main()
 			hex = Hex2();
 		}	
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
-			//if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'r', true, hex.emptyCounter)) {
-			//	file << "YES\n";
-			//	//printf("YES\n");
-			//}
-			//else {
-			//	file << "NO\n";
-			//	//printf("NO\n");
-			//}
-			//hex.whoWon = -1;
+			emptyCounter = hex.board.emptyCounter;
+			if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, RED, true, emptyCounter) == RED) {
+				file << "YES\n";
+				//printf("YES\n");
+			}
+			else {
+				file << "NO\n";
+				//printf("NO\n");
+			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
-			//if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, 'b', false, hex.emptyCounter)) {
-			//	file << "YES\n";
-			//	//printf("YES\n");
-			//}
-			//else {
-			//	file << "NO\n";
-			//	//printf("NO\n");
-			//}
-			//hex.whoWon = -1;
+			if (hex.CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(state, BLUE, false, emptyCounter) == BLUE) {
+				file << "YES\n";
+				//printf("YES\n");
+			}
+			else {
+				file << "NO\n";
+				//printf("NO\n");
+			}
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
-			//if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state)) {
-			//	file << "YES\n";
-			//	//printf("YES\n");
-			//}
-			//else {
-			//	file << "NO\n";
-			//	//printf("NO\n");
-			//}
-			//hex.whoWon = -1;
+			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state, emptyCounter) == RED) {
+				file << "YES\n";
+				//printf("YES\n");
+			}
+			else {
+				file << "NO\n";
+				//printf("NO\n");
+			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
-			//if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state)) {
-			//	file << "YES\n\n";
-			//	//printf("YES\n\n");
-			//}
-			//else {
-			//	file << "NO\n\n";
-			//	//printf("NO\n\n");
-			//}
-			//hex.~Hex2();
-			//hex = Hex2();
+			if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state, emptyCounter) == BLUE) {
+				file << "YES\n\n";
+				//printf("YES\n\n");
+			}
+			else {
+				file << "NO\n\n";
+				//printf("NO\n\n");
+			}
+			hex.board.~Board();
+			hex = Hex2();
 		}		
 		else {
 			if (line == "") {
@@ -186,28 +186,25 @@ int main()
 					continue;
 				}
 				case '<': {
-					char pawn[5];
-					for (short j = 0; j < 5; ++j) {
-						pawn[j] = line[i + j];
-					}
+					char pawn = line[i + 2]; // +2 pobieram symbol z < >
 					i += 4; // symbol '>' in line
 
-					switch (pawn[2]) {
+					switch (pawn) {
 					case 'r': {
-						hex.board.board[counter][hex.board.indexes[counter]++] = new Pawn(pawn[2], counter, hex.board.indexes[counter]);
+						hex.board.board[counter][hex.board.indexes[counter]++] = new Pawn(pawn, counter, hex.board.indexes[counter]);
 						++hex.board.RED_PAWNS;
 						++hex.board.PAWNS_NUMBER;
 						break;
 					}
 					case 'b': {
-						hex.board.board[counter][hex.board.indexes[counter]++] = new Pawn(pawn[2], counter, hex.board.indexes[counter]);
+						hex.board.board[counter][hex.board.indexes[counter]++] = new Pawn(pawn, counter, hex.board.indexes[counter]);
 						++hex.board.BLUE_PAWNS;
 						++hex.board.PAWNS_NUMBER;
 						break;
 					}
 					case ' ': {
 						short size_ = hex.board.indexes[counter]++;
-						hex.board.board[counter][size_] = new Pawn(pawn[2], counter, size_);
+						hex.board.board[counter][size_] = new Pawn(pawn, counter, size_);
 						hex.board.emptyPlaces[hex.board.emptyCounter++] = hex.board.board[counter][size_];
 					}
 					default: {  
@@ -223,7 +220,7 @@ int main()
 				}
 			}
 			++hex.lineCounter;
-			hex.board.size = (hex.lineCounter) / 2;
+			hex.board.size = hex.lineCounter / 2;
 			hex.oldTags = counter;
 		}
  	}

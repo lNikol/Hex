@@ -1,10 +1,11 @@
 #pragma once
+#include "Player.h"
 struct Pawn {
-	char symbol;
+	Player symbol;
 	short x, y;
 	bool visited = false;
 	Pawn(char s, short yy, short xx) {
-		symbol = s;
+		symbol = (s == 'r' ? RED : s == 'b' ? BLUE : EMPTY);
 		y = yy;
 		x = xx;
 	}

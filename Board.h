@@ -24,11 +24,11 @@ struct Board {
 	Player DFS(Pawn* pawn, bool isRed);
 	Player IS_GAME_OVER(const short& state);
 	
-	void checkPositions(Player toFind, Player afterDFS[], bool isPerfect, const short& st, const char& player, const char& symbol, Pawn** possiblePerfectMoves);
+	void checkPositions(Player toFind, Player afterDFS[], bool isPerfect, const short& st, const Player& player, const Player& symbol, Pawn** possiblePerfectMoves);
 	bool IS_BOARD_POSSIBLE(const short& state);
 	
 	void countPlayersTurns(const short& N, bool isRed);
-	void updateStats(const char& s, const short& n);
+	void updateStats(const Player& pl, const short& n);
 
 	~Board();
 
