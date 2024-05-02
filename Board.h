@@ -14,7 +14,7 @@ struct Board {
 
 	bool IS_BOARD_CORRECT = false;
 	Pawn* emptyPlaces[ARR_SIZE * ARR_SIZE] = { nullptr };
-	short emptyCounter = 0;//, emptyCounter2 = 0
+	short emptyCounter = 0;
 	
 	bool get_IS_BOARD_CORRECT();
 

@@ -1,29 +1,28 @@
 ﻿#include <iostream>
-#include <string>
 #include <fstream>
-#include "Hex2.h"
+#include <string>
+#include "Hex.h"
 using namespace std;
 
 int main()
 {
 	ofstream file("temp.txt");
-	Hex2 hex;
+	Hex hex;
 	short emptyCounter = hex.board.emptyCounter;
 	string line;
 	short state = 0;
 	while (getline(cin, line)) {
 		if (line == "BOARD_SIZE") {
-			// JESLI NIE DZIALA, TO MUSI BYC LINECOUNTER/2, A NIE (LINECOUNTER+1)/2
 			file << hex.board.size << endl << endl;
-			//printf("%d\n\n", (hex.board.size);
+			//printf("%d\n\n", hex.board.size);
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}
 		else if (line == "PAWNS_NUMBER") {
 			file << hex.board.PAWNS_NUMBER << endl << endl;
 			//printf("%d\n\n", hex.board.PAWNS_NUMBER);
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}
 		else if (line == "IS_BOARD_CORRECT") {
 			if (hex.board.get_IS_BOARD_CORRECT()) {
@@ -35,7 +34,7 @@ int main()
 				//printf("NO\n\n");
 			}
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}
 		else if (line == "IS_GAME_OVER") {
 			switch (hex.board.IS_GAME_OVER(state)) {
@@ -56,7 +55,7 @@ int main()
 			}
 			}
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}
 		else if (line == "IS_BOARD_POSSIBLE") {
 			if (hex.board.IS_BOARD_POSSIBLE(state)) {
@@ -68,7 +67,7 @@ int main()
 				//printf("NO\n\n");
 			}
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
 			emptyCounter = hex.board.emptyCounter;
@@ -111,7 +110,7 @@ int main()
 				//printf("NO\n\n");
 			}
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}	
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT") {
 			emptyCounter = hex.board.emptyCounter;
@@ -154,7 +153,7 @@ int main()
 				//printf("NO\n\n");
 			}
 			hex.board.~Board();
-			hex = Hex2();
+			hex = Hex();
 		}		
 		else {
 			if (line == "") {
@@ -224,5 +223,5 @@ int main()
 			hex.oldTags = counter;
 		}
  	}
-  	file.close();
+	file.close();
 }

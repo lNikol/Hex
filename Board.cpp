@@ -1,16 +1,6 @@
 ﻿#include "Board.h"
 using namespace std;
 
-//void Board::createCell(const short& y, const char& s) {
-//	if (s == ' ') {
-//		board[y][indexes[y]++] = new Cell(s, y, indexes[y]);
-//		emptyPlaces[emptyCounter++] = board[y][indexes[y] - 1];
-//	}
-//	else {
-//		board[y][indexes[y]++] = new Cell(s, y, indexes[y]);
-//	}
-//}
-
 bool Board::get_IS_BOARD_CORRECT() {
 	if (BLUE_PAWNS == RED_PAWNS - 1 || BLUE_PAWNS == RED_PAWNS) {
 		IS_BOARD_CORRECT = true;
@@ -61,25 +51,17 @@ Player Board::DFS(Pawn* pawn, bool isRed) {
 
 	for (short i = 0; i < count; ++i) {
 		if (neighbors == nullptr || neighbors[i] == nullptr) {
-			for (short l = 0; l < count; ++l) {
-				neighbors[l] = nullptr;
-			}
 			break;
 		}
 		if (neighbors != nullptr && neighbors[i]->visited == false) {
 			if (neighbors[i]->y == size - 1 && isRed) {
-				for (short l = 0; l < count; ++l) {
-					neighbors[l] = nullptr;
-				}
 				// ten warunek dla gracza czerwonego od lewej granicy do prawej
 				// czerwony gracz
 				return RED;
 			}
 			else if (neighbors[i]->x == size - 1 && !isRed) {
+				// ten warunek dla gracza niebieskiego od gornej granicy do dolnej
 				// niebieski gracz
-				for (short l = 0; l < count; ++l) {
-					neighbors[l] = nullptr;
-				}
 				return BLUE;
 			}
 			Player p = DFS(neighbors[i], isRed);
@@ -129,10 +111,9 @@ Player Board::IS_GAME_OVER(const short& state) {
 }
 
 void Board::checkPositions(Player toFind, Player afterDFS[], bool isPerfect, const short& st, const Player& player, const Player& symbol, Pawn** possiblePerfectMoves = nullptr) {
-	// player może być r, b lub ' '
 	// ta funkcja jest używana w naive i is_board_possible
-	short k = 0;
 	if (player == EMPTY) {
+		short k = 0;
 		for (short i = 0; i < emptyCounter; ++i) {
 			if (emptyPlaces[i]->symbol != EMPTY) {
 				*(afterDFS + i) = INCORRECT;
@@ -143,6 +124,10 @@ void Board::checkPositions(Player toFind, Player afterDFS[], bool isPerfect, con
 			*(afterDFS + i) = p;
 			emptyPlaces[i]->symbol = player;
 			if (isPerfect && p == toFind) {
+				// jesli wynik getWinner jest player, ktorego szukalem,
+				// to odpowiednio dodaje te gre do mozliwych gier wygranych
+				// jesli licba mozliwych wygranych jest == 2
+				// to w perfect gracz czy przeciwnik wygra gre
 				*(possiblePerfectMoves + k++) = emptyPlaces[i];
 				if (k == 2) {
 					return;
@@ -154,6 +139,9 @@ void Board::checkPositions(Player toFind, Player afterDFS[], bool isPerfect, con
 		}
 		return;
 	}
+
+	// sprawdzenie dla gracza (BLUE lub RED) czy zawsze wygrywa
+	// tutaj zamieniam na spacje, czyli 'usuwam' tymczasowo pion gracza
 	short count = 0;
 	for (short i = 0; i < size; ++i) {
 		for (short j = 0; j < size; ++j) {
@@ -173,11 +161,15 @@ bool Board::IS_BOARD_POSSIBLE(const short& state) {
 			Player* afterDFS = new Player[RED_PAWNS]{ EMPTY };
 			checkPositions(BLUE, afterDFS, false, 2, RED, EMPTY);
 			for (short k = 0; k < RED_PAWNS; ++k) {
+				// jesli chociazby w jednej grze gracz nie wygral,
+				// to oznacza, ze board possible
 				if (*(afterDFS + k) != RED) {
 					delete[] afterDFS;
 					return true;
 				}
 			}
+			// w przeciwnym wypadku gracz zawsze wygrywał
+			// wiec nie jest possible
 			delete[] afterDFS;
 			return false;
 		}
@@ -194,11 +186,15 @@ bool Board::IS_BOARD_POSSIBLE(const short& state) {
 			Player* afterDFS = new Player[BLUE_PAWNS]{ EMPTY };
 			checkPositions(RED, afterDFS, false, 1, BLUE, EMPTY);
 			for (short k = 0; k < BLUE_PAWNS; ++k) {
+				// jesli chociazby w jednej grze gracz nie wygral,
+				// to oznacza, ze board possible
 				if (afterDFS[k] != BLUE) {
 					delete[] afterDFS;
 					return true;
 				}
 			}
+			// w przeciwnym wypadku gracz zawsze wygrywał
+			// wiec nie jest possible
 			delete[] afterDFS;
 			return false;
 		}
