@@ -71,7 +71,7 @@ int main()
 		}
 		else if (line == "CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
 			emptyCounter = hex.board.emptyCounter;
-			if (hex.CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, emptyCounter) == RED) {
+			if (hex.CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, RED, true, emptyCounter) == RED) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -81,7 +81,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, emptyCounter) == RED) {
+			if (hex.CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, RED, true, emptyCounter) == RED) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -91,7 +91,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, emptyCounter) == BLUE) {
+			if (hex.CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, BLUE, false, emptyCounter) == BLUE) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -101,7 +101,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT") {
-			if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, emptyCounter) == BLUE) {
+			if (hex.CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, BLUE, false, emptyCounter) == BLUE) {
 				file << "YES\n\n";
 				//printf("YES\n\n");
 			}
@@ -134,7 +134,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
-			if (hex.CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state, emptyCounter) == RED) {
+			if (hex.CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(state, RED, true, emptyCounter) == RED) {
 				file << "YES\n";
 				//printf("YES\n");
 			}
@@ -144,7 +144,7 @@ int main()
 			}
 		}
 		else if (line == "CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT") {
-			if (hex.CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(state, emptyCounter) == BLUE) {
+			if (hex.CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(state, BLUE, false, emptyCounter) == BLUE) {
 				file << "YES\n\n";
 				//printf("YES\n\n");
 			}

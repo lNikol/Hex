@@ -20,7 +20,6 @@ void Board::resetVisited() {
 }
 
 void Board::getNeighbors(Pawn** neighbors, const Pawn* pawn, short& count) {
-	count = 0;
 	short dLines[] = { -1, 0, 1, 1, 0, -1 };
 	short dPoses[] = { -1, -1, 0, 1, 1, 0 };
 
@@ -292,6 +291,8 @@ Board::~Board() {
 				delete board[i][j];
 			}
 		}
+	}
+	if (emptyPlaces[0] != nullptr) {
 		for (short i = 0; i < emptyCounter; ++i) {
 			emptyPlaces[i] = nullptr;
 			delete emptyPlaces[i];

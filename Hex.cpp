@@ -17,7 +17,7 @@ Player Hex::CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, const Play
 			Player* afterDFS = new Player[board.emptyCounter]{ INCORRECT };
 			board.checkPositions(player, afterDFS, false, player == RED ? 2 : 1, EMPTY, player, nullptr);
 			for (short k = 0; k < board.emptyCounter; ++k) {
-				// jesli chociaby w jednej grze gracz wygral, to zwracam gracza
+				// jesli chociazby w jednej grze gracz wygral, to zwracam gracza
 				if (afterDFS[k] == player) {
 					delete[] afterDFS;
 					return player;
@@ -35,14 +35,6 @@ Player Hex::CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, const Play
 	}
 }
 
-Player Hex::CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, short emptyCounter) {
-	return CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, RED, true, emptyCounter);
-}
-
-Player Hex::CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(const short& state, short emptyCounter) {
-	return CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, BLUE, false, emptyCounter);
-}
-
 Player Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const Player& player, bool isRed, short emptyCounter) {
 	if (board.get_IS_BOARD_CORRECT()) {
 		if (board.getWinner(state) != NONE) {
@@ -54,7 +46,7 @@ Player Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const Pla
 			return INCORRECT;
 		}
 		if (board.turns <= emptyCounter) {
-			Player* afterDFS = new Player[emptyCounter * emptyCounter]{ INCORRECT };
+			Player* afterDFS = new Player[emptyCounter * emptyCounter] { INCORRECT };
 			short k = 0;
 			short st = player == RED ? 2 : 1;
 			for (short i = 0; i < emptyCounter; ++i) {
@@ -102,14 +94,6 @@ Player Hex::CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, const Pla
 	}
 }
 
-Player Hex::CAN_RED_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, short emptyCounter) {
-	return CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, RED, true, emptyCounter);
-}
-
-Player Hex::CAN_BLUE_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(const short& state, short emptyCounter) {
-	return CAN_WIN_IN_2_MOVES_WITH_NAIVE_OPPONENT(state, BLUE, false, emptyCounter);
-}
-
 Player Hex::CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state, const Player& player, bool isRed, short emptyCounter) {
 
 	/* Logika:
@@ -136,10 +120,10 @@ Player Hex::CAN_WIN_IN_1_MOVE_WITH_PERFECT_OPPONENT(const short& state, const Pl
 					return INCORRECT;
 				}
 				else if (board.redTurns > board.blueTurns) {
-					return CAN_RED_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, emptyCounter);
+					return CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, RED, true, emptyCounter);
 				}
 				else if (board.redTurns < board.blueTurns) {
-					return CAN_BLUE_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, emptyCounter);
+					return CAN_WIN_IN_1_MOVE_WITH_NAIVE_OPPONENT(state, BLUE, false, emptyCounter);
 				}
 			}
 			else {
@@ -294,12 +278,4 @@ Player Hex::CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(const short& state, const
 	else {
 		return INCORRECT;
 	}
-}
-
-Player Hex::CAN_RED_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(const short& state, short emptyCounter) {
-	return CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(state, RED, true, emptyCounter);
-}
-
-Player Hex::CAN_BLUE_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT(const short& state, short emptyCounter) {
-	return CAN_WIN_IN_2_MOVES_WITH_PERFECT_OPPONENT_2(state, BLUE, false, emptyCounter);
 }
